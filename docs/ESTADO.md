@@ -42,7 +42,7 @@ Ciudad ensamblada y guardada como nivel; colisiones y escala transitables; vehí
 - Se compararon hashes SHA-256 de los 1,622 archivos originales de Content, Config y descriptor: sin cambios. No se modificó la sala de plantilla ni se integró todavía la ciudad.
 - Cachés y reportes locales quedan excluidos; se verificaron 1,641 archivos preparados y 1,615 paquetes bajo LFS. El mapa está representado por un puntero LFS válido en el índice.
 - La revisión de espacios del snapshot completo señala líneas vacías finales preexistentes en tres archivos `Config` (DefaultEngine, DefaultGame y DefaultInput); se preservaron para no alterar la línea base. Los archivos nuevos se comprueban por separado.
-- La integridad Git/LFS se comprueba al cerrar el commit; la prueba funcional del simulador permanece pendiente.
+- Commit inicial creado: `cd30fcc`. `git lfs fsck` terminó correctamente y la rama `main` quedó limpia después del commit, sin remoto. La revisión de espacios de los archivos nuevos también pasó; la prueba funcional del simulador permanece pendiente.
 
 ## Próximo resultado útil
 
