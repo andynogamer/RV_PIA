@@ -14,4 +14,5 @@ private:
     void ToggleReverse();
     void ResetPractice();
     void TogglePracticePause();
+    void RequestHorn();
 };

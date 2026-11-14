@@ -43,7 +43,9 @@ Para el segundo avance pide escenario/mapa 20; área de acción definida 20; mod
 
 Prioridad: recorrido corto funcional, vehículo controlable, visor real, háptico real y evidencia de su integración. Mejorar el área demostrable antes de poblar la ciudad completa.
 
-Fuera del mínimo: tráfico complejo, peatones autónomos, clima dinámico, multijugador, caja manual completa, plataforma móvil, diagnóstico de ansiedad y medición de eficacia terapéutica. Pueden plantearse como trabajo futuro sin presentarlos como funciones existentes.
+Ampliación solicitada el 14 de noviembre: playground urbano mayor, inicio estacionado, incorporación a la circulación, tráfico autónomo, semáforos, señales y comportamiento contextual, incluidos pitidos al integrar sonido. Se incorpora al alcance esperado. La práctica corta se conserva como entrenamiento inicial y prueba de regresión. Ver ENTORNO_URBANO.md para niveles de implementación y aceptación.
+
+Fuera del mínimo: peatones autónomos complejos, clima dinámico, multijugador, caja manual completa, plataforma móvil, diagnóstico de ansiedad y medición de eficacia terapéutica. No presentar esos elementos como existentes.
 
 ## Pendientes del equipo
 

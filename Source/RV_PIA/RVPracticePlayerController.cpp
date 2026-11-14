@@ -16,6 +16,7 @@ void ARVPracticePlayerController::SetupInputComponent()
     InputComponent->BindKey(EKeys::R, IE_Pressed, this, &ARVPracticePlayerController::ToggleReverse);
     InputComponent->BindKey(EKeys::Home, IE_Pressed, this, &ARVPracticePlayerController::ResetPractice).bExecuteWhenPaused = true;
     InputComponent->BindKey(EKeys::P, IE_Pressed, this, &ARVPracticePlayerController::TogglePracticePause).bExecuteWhenPaused = true;
+    InputComponent->BindKey(EKeys::H, IE_Pressed, this, &ARVPracticePlayerController::RequestHorn);
 }
 
 void ARVPracticePlayerController::ToggleReverse()
@@ -34,4 +35,9 @@ void ARVPracticePlayerController::TogglePracticePause()
 {
     if (APawn* ControlledPawn = GetPawn())
         if (auto* Assist = ControlledPawn->FindComponentByClass<URVDrivingAssistComponent>()) Assist->TogglePracticePause();
+}
+void ARVPracticePlayerController::RequestHorn()
+{
+    if (APawn* ControlledPawn=GetPawn())
+        if (auto* Assist=ControlledPawn->FindComponentByClass<URVDrivingAssistComponent>()) Assist->RequestHorn();
 }

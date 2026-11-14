@@ -5,6 +5,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "RVTrafficSystem.h"
+#include "EngineUtils.h"
 
 URVDrivingAssistComponent::URVDrivingAssistComponent()
 {
@@ -27,6 +29,8 @@ void URVDrivingAssistComponent::BeginPlay()
     Movement->bThrottleAsBrake = false;
     Movement->SetUseAutomaticGears(true);
     Movement->SetTargetGear(1, true);
+    for (TActorIterator<ARVUrbanScenario> It(GetWorld()); It; ++It) { UrbanScenario=*It; bUrbanMode=true; break; }
+    if (bUrbanMode) Movement->SetHandbrakeInput(true);
     TArray<UStaticMeshComponent*> Components;
     Vehicle->GetComponents(Components);
     for (UStaticMeshComponent* Component : Components)
@@ -91,12 +95,13 @@ void URVDrivingAssistComponent::ResetPractice()
     Vehicle->GetMesh()->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
     // Recreate Chaos' asynchronous state so it cannot restore the pre-teleport pose.
     Movement->ResetVehicle();
-    Movement->SetHandbrakeInput(false);
+    Movement->SetHandbrakeInput(bUrbanMode);
     Movement->SetTargetGear(1, true);
     Movement->SetBrakeInput(0.f);
     bRequireThrottleRelease = bThrottleWasHeld || bWasPaused;
     bReverseMode = false;
     PracticeStage = 0;
+    UrbanCheckpointIndex = 0;
     SetStatus(TEXT("Practica reiniciada. Avanza con suavidad."));
 }
 
@@ -117,6 +122,11 @@ void URVDrivingAssistComponent::TogglePracticePause()
 
 float URVDrivingAssistComponent::GetDistanceToGoalMeters() const
 {
+    if (bUrbanMode && UrbanScenario && Vehicle)
+    {
+        if (PracticeStage>=3 || !UrbanScenario->Checkpoints.IsValidIndex(UrbanCheckpointIndex)) return 0;
+        return FVector::Dist2D(Vehicle->GetActorLocation(),UrbanScenario->Checkpoints[UrbanCheckpointIndex])*.01f;
+    }
     if (!Vehicle || PracticeStage >= 2) return 0.f;
     const float ForwardCm = PracticeStage == 0 ? 1200.f : 4000.f;
     const FVector Target = InitialTransform.GetLocation() + InitialTransform.GetRotation().GetForwardVector() * ForwardCm;
@@ -126,10 +136,29 @@ float URVDrivingAssistComponent::GetDistanceToGoalMeters() const
 FString URVDrivingAssistComponent::GetInstruction() const
 {
     if (bPracticePaused) return TEXT("PAUSA - P para continuar. Home para reiniciar.");
+    if (bRequireThrottleRelease) return TEXT("Suelta el acelerador para continuar con seguridad.");
     if (StatusSeconds > 0.f) return Status;
+    if (bUrbanMode)
+    {
+        if (PracticeStage==0) return TEXT("Estacionado: pulsa y suelta Espacio para liberar el freno de mano.");
+        if (PracticeStage==1) return TEXT("Observa el trafico e incorporate con suavidad al carril.");
+        if (PracticeStage==2) return TEXT("Continua por la ciudad. Respeta semaforos, senales y distancia.");
+        return TEXT("Recorrido urbano completado. Puedes explorar o reiniciar con Home.");
+    }
     if (PracticeStage == 0) return TEXT("Avanza despacio entre los conos. Limite: 30 km/h.");
     if (PracticeStage == 1) return TEXT("Frena y detente dentro de la zona final.");
     return TEXT("Practica completada. Home para repetir.");
+}
+
+FString URVDrivingAssistComponent::GetUrbanSummary() const
+{
+    if (!UrbanScenario) return FString();
+    return FString::Printf(TEXT("Ruta %d/%d | Avisos en rojo: %d"),FMath::Min(UrbanCheckpointIndex+1,UrbanScenario->Checkpoints.Num()),
+        UrbanScenario->Checkpoints.Num(),UrbanScenario->RedLightWarnings);
+}
+void URVDrivingAssistComponent::RequestHorn()
+{
+    if (UrbanScenario && !bPracticePaused) UrbanScenario->RequestPlayerHorn(GetOwner());
 }
 
 void URVDrivingAssistComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -152,6 +181,12 @@ void URVDrivingAssistComponent::TickComponent(float DeltaTime, ELevelTick TickTy
         Movement->SetBrakeInput(0.f);
     }
     StatusSeconds = FMath::Max(0.f, StatusSeconds - DeltaTime);
+    if (bUrbanMode && PracticeStage==0)
+    {
+        if (Movement->GetHandbrakeInput()) { Movement->SetThrottleInput(0.f); return; }
+        PracticeStage=1;
+        if (Movement->GetThrottleInput()>.05f) { bRequireThrottleRelease=true; StopInputs(); return; }
+    }
     if (Movement->GetBrakeInput() > 0.05f) Movement->SetThrottleInput(0.f);
     const float Limit = bReverseMode ? ReverseLimitKmh : ForwardLimitKmh;
     if (GetSpeedKmh() >= Limit)
@@ -161,14 +196,27 @@ void URVDrivingAssistComponent::TickComponent(float DeltaTime, ELevelTick TickTy
     const FVector Offset = Vehicle->GetActorLocation() - InitialTransform.GetLocation();
     const float Along = FVector::DotProduct(Offset, InitialTransform.GetRotation().GetForwardVector());
     const float Across = FVector::DotProduct(Offset, InitialTransform.GetRotation().GetRightVector());
-    if (FMath::Abs(Across) > CorridorHalfWidthCm || Along < -900.f || Along > CorridorLengthCm || Offset.Z < -200.f)
+    const bool Outside=bUrbanMode && UrbanScenario ? !UrbanScenario->IsInsideBounds(Vehicle->GetActorLocation()) :
+        FMath::Abs(Across)>CorridorHalfWidthCm || Along< -900.f || Along>CorridorLengthCm || Offset.Z< -200.f;
+    if (Outside)
     {
         ResetPractice();
         SetStatus(TEXT("Fuera del area de practica. Reinicio seguro."));
         return;
     }
-    if (PracticeStage == 0 && GetDistanceToGoalMeters() < 2.5f) PracticeStage = 1;
-    if (PracticeStage == 1 && GetDistanceToGoalMeters() < 3.f && GetSpeedKmh() < 0.5f) PracticeStage = 2;
+    if (bUrbanMode && UrbanScenario)
+    {
+        if (PracticeStage>0 && PracticeStage<3 && GetDistanceToGoalMeters()<4.f)
+        {
+            if (UrbanCheckpointIndex<UrbanScenario->Checkpoints.Num()-1) { ++UrbanCheckpointIndex; PracticeStage=2; }
+            else if (GetSpeedKmh()<.5f) PracticeStage=3;
+        }
+    }
+    else
+    {
+        if (PracticeStage == 0 && GetDistanceToGoalMeters() < 2.5f) PracticeStage = 1;
+        if (PracticeStage == 1 && GetDistanceToGoalMeters() < 3.f && GetSpeedKmh() < 0.5f) PracticeStage = 2;
+    }
     if (SteeringWheel)
     {
         SteeringWheel->SetRelativeRotation(InitialWheelRotation * FQuat(FVector::RightVector,

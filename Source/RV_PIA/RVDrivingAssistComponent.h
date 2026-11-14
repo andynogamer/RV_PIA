@@ -6,6 +6,7 @@
 class AWheeledVehiclePawn;
 class UChaosWheeledVehicleMovementComponent;
 class UStaticMeshComponent;
+class ARVUrbanScenario;
 
 /** Runtime training rules, independent of editor Python and input-device backend. */
 UCLASS(ClassGroup=(RutaVirtual), meta=(BlueprintSpawnableComponent))
@@ -32,17 +33,22 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Training") bool bReverseMode = false;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Training") bool bPracticePaused = false;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Training") int32 PracticeStage = 0;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Urban") bool bUrbanMode = false;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Urban") int32 UrbanCheckpointIndex = 0;
     UFUNCTION(BlueprintCallable, Category="Training") bool TryToggleReverse();
     UFUNCTION(BlueprintCallable, Category="Training") void ResetPractice();
     UFUNCTION(BlueprintCallable, Category="Training") void TogglePracticePause();
     UFUNCTION(BlueprintPure, Category="Training") FString GetInstruction() const;
     UFUNCTION(BlueprintPure, Category="Training") float GetSpeedKmh() const;
     UFUNCTION(BlueprintPure, Category="Training") float GetDistanceToGoalMeters() const;
+    UFUNCTION(BlueprintPure, Category="Urban") FString GetUrbanSummary() const;
+    UFUNCTION(BlueprintCallable, Category="Urban") void RequestHorn();
 
 private:
     UPROPERTY() TObjectPtr<AWheeledVehiclePawn> Vehicle;
     UPROPERTY() TObjectPtr<UChaosWheeledVehicleMovementComponent> Movement;
     UPROPERTY() TObjectPtr<UStaticMeshComponent> SteeringWheel;
+    UPROPERTY() TObjectPtr<ARVUrbanScenario> UrbanScenario;
     FTransform InitialTransform;
     FQuat InitialWheelRotation;
     FString Status;

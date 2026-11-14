@@ -1,5 +1,6 @@
 param(
     [switch]$EnableAgentBridge,
+    [string]$Map = '',
     [string]$EngineRoot = 'C:\Program Files\Epic Games\UE_5.6'
 )
 $ErrorActionPreference = 'Stop'
@@ -9,7 +10,8 @@ if (@(Get-Process UnrealEditor -ErrorAction SilentlyContinue).Count) {
 }
 $editor = Join-Path $EngineRoot 'Engine\Binaries\Win64\UnrealEditor.exe'
 $project = Join-Path $projectRoot 'RV_PIA.uproject'
-$launchArgs = @(('"' + $project + '"'), '/Game/RutaVirtual/Maps/L_CiudadPractica', '-NoSplash')
+$launchArgs = @(('"' + $project + '"'), '-NoSplash')
+if ($Map) { $launchArgs += $Map }
 if ($EnableAgentBridge) {
     $bridge = Join-Path $PSScriptRoot 'Editor\session_bridge.py'
     $launchArgs += ('-ExecutePythonScript="' + $bridge + '"')
