@@ -1,0 +1,8 @@
+---
+description: Gobernanza general del simulador académico RUTA VIRTUAL en Unreal Engine
+alwaysApply: true
+---
+
+Lee y aplica `AGENTS.md` en la raíz del proyecto.
+Antes de implementar, consulta `docs/PROYECTO.md`, `docs/ESTADO.md` y `docs/TAREAS.md`.
+Estas reglas se aplican a todo el repositorio. Evita duplicar instrucciones técnicas aquí.
