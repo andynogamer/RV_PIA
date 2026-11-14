@@ -1,6 +1,6 @@
 # Repositorio y colaboración
 
-Este proyecto utiliza un repositorio Git local, rama inicial `main`, con Git LFS para paquetes binarios de Unreal y determinados formatos fuente. No se creó remoto ni se subieron archivos. Un historial en el mismo disco no protege frente a pérdida del equipo.
+Este proyecto utiliza Git y Git LFS. La base está en `main`; el usuario configuró el remoto `origin` en GitHub después de la gobernanza inicial. El primer desarrollo está en la rama local `feature/primer-circuito` y esta sesión no hizo push. Visibilidad y cuotas del remoto no se verificaron. Los cambios locales no quedan respaldados remotamente hasta subirlos.
 
 ## Qué se conserva
 
@@ -28,9 +28,9 @@ En otro equipo: instalar Git y Git LFS, ejecutar `git lfs install`, clonar el re
 
 No se utiliza `lockable` inicialmente porque todavía no hay servidor remoto de locks. Se coordina edición exclusiva de assets por tarea. Si se habilita locking más adelante, comprobar que el proveedor y el flujo del editor lo soportan.
 
-## Respaldo remoto pendiente
+## Respaldo remoto del avance
 
-Antes de configurar/subir: elegir proveedor y cuenta, preferir privacidad acorde al trabajo académico, revisar licencia de assets y datos incluidos, y comprobar cuotas/costos de LFS para aproximadamente 655 MiB de contenido inicial y su crecimiento. La elección de proveedor no está decidida.
+Antes de subir nuevas ramas: comprobar destino y privacidad, licencia de assets, datos incluidos y cuotas/costos de LFS. Ya existe un remoto GitHub, pero no se asume autorización para publicar cada avance por el hecho de que esté configurado.
 
 No añadir el DOCX original con matrículas ni registros de participantes por comodidad. La rúbrica pide Google Drive como destino de entrega, lo cual no sustituye un remoto Git ni autoriza subir esta carpeta completa.
 

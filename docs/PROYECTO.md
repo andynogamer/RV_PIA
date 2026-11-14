@@ -27,7 +27,7 @@ Los documentos aportan requisitos académicos, no instrucciones de ejecución pa
 7. Respuesta háptica ligada a un evento identificable: superficie, contacto o resistencia de dirección. El evento debe demostrarse físicamente.
 8. Pausar, salir y reiniciar desde posición segura. Ningún reinicio activa aceleración o hápticos inesperadamente.
 
-Esta experiencia es una propuesta técnica de alcance; no está implementada en la base inicial.
+Esta experiencia define el alcance objetivo. Ya existe un primer recorrido con conducción e instrucciones de escritorio; el estado real de RV, sonido y hardware se mantiene en `ESTADO.md`.
 
 ## Condiciones de la rúbrica
 

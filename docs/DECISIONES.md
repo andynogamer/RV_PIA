@@ -34,6 +34,14 @@ Estado: preparación autorizada por el usuario. Versionar proyecto y assets exis
 
 Estado: fecha objetivo, tipo de revisión pendiente. El usuario dijo «jueves» el sábado 14 de noviembre de 2026; se interpreta como 19 de noviembre, America/Mexico_City. Hasta aclararlo, el plan contempla requisitos de la final. No presentar esta interpretación como fecha escrita en la rúbrica, cuyas revisiones aparecen por anunciar.
 
-## Plantilla para una decisión nueva
+## D-009 — Primer prototipo de escritorio
+
+Estado: implementado el 14 de noviembre de 2026, autorizado por el usuario al iniciar desarrollo. Reutilizar la plantilla Chaos instalada de UE 5.6 y complementar con C++ y arte de cabina generado en Blender. Conservar ciudad y sala originales; ensamblar mallas con transformaciones ya incorporadas en un mapa propio. Acotar un corredor de 40 m mientras se desarrollan colisiones del resto del entorno.
+
+Las pruebas detectaron la reversa automática del freno de plantilla; se desactivó y se agregó selector R con condición de parada y acelerador liberado. El reinicio usa teleport físico y reinicializa el estado asíncrono de Chaos. Se autoriza reiniciar el editor dentro del desarrollo tras comprobar/guardar paquetes, sin descartar trabajo.
+
+El usuario permite recursos externos para uso privado académico. Para esta implementación se usaron recursos oficiales ya instalados y arte original; no se descargaron recursos nuevos ni se hizo push. El remoto `origin` fue configurado por el usuario entre sesiones.
+
+## Registro de decisiones futuras
 
 Identificador y título; fecha; estado; problema; evidencia/fuente; decisión; consecuencias; validación; alternativa relevante si explica el costo; condición de revisión. Evitar abrir un registro nuevo por cambios triviales.

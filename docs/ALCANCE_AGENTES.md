@@ -19,7 +19,7 @@ No existe una prohibición general de que una IA trabaje con Blueprint. El acces
 
 Python puede crear o modificar determinados assets, colocar actores y configurar propiedades expuestas. No se debe prometer construir cualquier grafo Blueprint mediante la API estándar. Para automatizar grafos puede ser necesario desarrollar una herramienta de editor C++, usar una integración ya instalada o realizar operaciones por interfaz. Su costo debe justificarlo frente a implementar la lógica directamente en C++.
 
-Si hay control visual del editor, el agente puede inspeccionar escenas, configurar componentes y operar nodos visibles. Debe confirmar el resultado, compilar, guardar lo pertinente y comprobar el comportamiento. En esta sesión solo se inspeccionó visualmente el mapa; no se editaron assets.
+Si hay control visual del editor, el agente puede inspeccionar escenas, configurar componentes y operar nodos visibles. Debe confirmar el resultado, compilar, guardar lo pertinente y comprobar el comportamiento. En el primer desarrollo ya se construyeron y verificaron mapa, Blueprints derivados y lógica C++ mediante herramientas del editor; los resultados concretos están en ESTADO.md.
 
 ## Trabajo que requiere al equipo humano
 

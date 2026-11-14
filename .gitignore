@@ -23,6 +23,8 @@
 /Content/Collections/
 *.tmp
 *.bak
+*.blend1
+*.blend2
 Thumbs.db
 .DS_Store
 __pycache__/

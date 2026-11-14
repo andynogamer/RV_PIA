@@ -4,11 +4,13 @@ Simulador académico inmersivo de familiarización con la conducción, desarroll
 
 Entrega indicada por el usuario: jueves 19 de noviembre de 2026, zona America/Mexico_City. Falta confirmar si corresponde al segundo avance o a la entrega final; se planifica conservadoramente para la final.
 
-## Estado inicial
+## Estado actual
 
-Existe la plantilla de RV y una ciudad importada. El único mapa guardado encontrado es `Content/VRTemplate/Maps/VRTemplateMap.umap`; al inspeccionarlo muestra la sala de plantilla. La ciudad todavía requiere montaje y validación como escenario conducible. No se ha demostrado un vehículo controlable, force feedback, Arduino ni RV con visor real.
+Existe un primer prototipo de escritorio en `/Game/RutaVirtual/Maps/L_CiudadPractica`: ciudad ensamblada, vehículo Chaos con teclado, cabina creada en Blender, marcha/reversa separadas, límites de velocidad, pausa, reinicio y una práctica señalizada de 40 metros. La sala original de RV se conserva intacta.
 
-El G920 está pendiente de llegar y el visor será prestado; su modelo no se conoce. El detalle comprobado y sus límites están en [estado del proyecto](docs/ESTADO.md).
+Para probar: pulsa Play y haz clic en la vista. W acelera, S frena, A/D giran, R cambia marcha casi detenido, P pausa e Inicio/Home reinicia. Consulta la [guía de desarrollo y controles](docs/DESARROLLO.md).
+
+El G920 está pendiente de llegar y el visor será prestado; su modelo no se conoce. No se han validado periféricos, hápticos ni ejecutable empaquetado. El resto de la ciudad todavía es escenario visual; el área practicable está acotada. El detalle está en [estado del proyecto](docs/ESTADO.md).
 
 ## Punto de entrada
 
@@ -23,13 +25,13 @@ El G920 está pendiente de llegar y el visor será prestado; su modelo no se con
 ## Abrir el proyecto
 
 1. Instala Unreal Engine 5.6; la sesión observada usa 5.6.1. No aceptes una conversión a 5.8 por defecto.
-2. Si obtienes el proyecto mediante Git, instala Git LFS y ejecuta `git lfs pull` después de clonar.
-3. Abre `RV_PIA.uproject`. La carga inicial puede generar shaders y cachés.
-4. Revisa el mapa activo y los errores del registro. En esta base todavía abre la plantilla de RV.
+2. Si obtienes el proyecto mediante Git, instala Git LFS y ejecuta `git lfs pull` después de clonar. El proyecto ahora incluye C++: necesita compilador y Windows SDK compatibles; ver la guía de desarrollo.
+3. Con el editor cerrado, `Scripts/Build-Project.ps1` compila el módulo Editor. Abre `RV_PIA.uproject`; la carga inicial puede generar shaders y cachés.
+4. Revisa el mapa activo y los errores del registro. El mapa de práctica debe ser la escena de inicio; la sala original sigue disponible por separado.
 5. Antes de trabajar con el visor identifica marca, modelo, modo de conexión y runtime; no selecciones un perfil de Quest por suposición.
 
 ## Herramientas incluidas
 
 `Scripts/Get-ProjectInventory.ps1` produce un inventario de archivos y configuración sin abrir Unreal. `Scripts/Audit-Unreal.ps1` prepara una auditoría de assets y actores dentro del motor; exige cerrar el editor después de guardar. Su ejecución interna aún debe verificarse en este equipo. Ambas escriben evidencia derivada bajo `Saved/AgentReports/`, fuera de Git.
 
-El repositorio es local y utiliza Git LFS para los assets binarios. No tiene respaldo remoto hasta conectarlo y subirlo a un servicio. No se ha publicado el proyecto ni otorgado una licencia de redistribución de sus recursos.
+El repositorio utiliza Git LFS. Ya existe un remoto `origin` configurado por el usuario; este avance se prepara en la rama local `feature/primer-circuito` y no se sube automáticamente. No se ha otorgado una licencia general de redistribución de los recursos.

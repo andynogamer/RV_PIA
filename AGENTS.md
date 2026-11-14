@@ -25,7 +25,7 @@
 
 ## Protección del proyecto
 - No borres, renombres, migres ni reimportes masivamente assets existentes. Para trabajo nuevo usa `/Game/RutaVirtual/` y conserva el material de ciudad en `/Game/Ciudad/`.
-- No cierres el editor, descartes trabajo sin guardar ni reemplaces un mapa abierto para facilitar una automatización. Los commandlets de auditoría se ejecutan con el editor cerrado y guardado por su operador.
+- Antes de reiniciar el editor por compilación o plugins, comprueba paquetes sucios y guarda los cambios de la tarea; conserva cambios ajenos. No fuerces el cierre ni descartes trabajo. Para cambiar de mapa, confirma que el actual está guardado. Los commandlets de auditoría se ejecutan con el editor cerrado.
 - No modifiques configuración de renderizado por intuición. Mide en el equipo y visor objetivo; registra antes/después y forma de revertir.
 - No cambies a Android autónomo por detectar ajustes de Quest en los `.ini`. Plataforma provisional: Windows PCVR; visor y runtime por confirmar.
 - Una persona o agente a la vez edita cada asset binario. Informa qué mapa/Blueprint vas a editar; no intentes combinar versiones binarias en un conflicto.

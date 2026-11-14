@@ -1,6 +1,10 @@
 # Arquitectura de implementación propuesta
 
-Estado: diseño para orientar tareas futuras; estas clases y assets no existen todavía. Partir de la base verificada en `ESTADO.md` y reutilizar recursos aptos antes de crear otros.
+Estado: arquitectura parcialmente implementada. La base de escritorio ya existe; las integraciones de hardware y RV real siguen pendientes. Consultar `ESTADO.md` y `DESARROLLO.md` antes de extenderla.
+
+## Implementación actual
+
+El vehículo Blueprint propio deriva de la plantilla Chaos y conserva su física y Enhanced Input. `URVDrivingAssistComponent` aplica reglas de sesión, marcha, velocidad y límites de práctica; `ARVPracticePlayerController` maneja eventos de teclado que siguen disponibles al pausar; `ARVPracticeHUD` presenta instrucciones de escritorio. Python construye assets y ejecuta pruebas de editor; no se usa para gameplay del producto. El suelo y los conos tienen colisión; la ciudad restante es visual. Las secciones siguientes orientan la ampliación, no certifican funciones de hardware.
 
 ## Plataforma y organización
 

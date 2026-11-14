@@ -20,7 +20,11 @@ Hay contenido bajo `VRTemplate`, `VRSpectator`, `Characters`, `LevelPrototyping`
 
 ## Audio, vehículo y publicidad
 
-No se han seleccionado ni verificado recursos nuevos. Cada incorporación debe registrar origen, autorización, modificaciones y crédito. El equipo debe distinguir material propio, de terceros y generado con asistencia de IA según las reglas académicas aplicables, sin inventar una política institucional.
+Se incorporaron dependencias oficiales de `UE_5.6/Templates/TP_VehicleAdvBP` y sus packs compartidos Vehicles/Input. Destinos: `/Game/VehicleTemplate`, `/Game/Vehicles`, `/Game/Input`. Se copiaron paquetes existentes preservando referencias, sin modificar los originales del motor. No se añadieron mapas ni variantes de competición. La fuente de referencia es la [plantilla oficial de vehículos UE 5.6](https://dev.epicgames.com/documentation/en-us/unreal-engine/vehicle-template-in-unreal-engine?application_version=5.6); sus recursos siguen sujetos a los términos de Epic, sin relicenciarlos como contenido libre.
+
+La cabina y el volante son arte original generado mediante `Scripts/Blender/build_cockpit.py`; fuentes bajo `SourceArt/Cockpit` y resultados en `/Game/RutaVirtual/Vehicles/Interior`. Los conos y carteles reutilizan formas básicas del motor con materiales propios. No se descargaron assets externos en esta implementación.
+
+Audio y publicidad nuevos siguen pendientes. Cada incorporación debe registrar origen, autorización, modificaciones y crédito. El equipo debe distinguir material propio, de terceros y generado con asistencia de IA según las reglas académicas aplicables, sin inventar una política institucional.
 
 ## Registro mínimo por incorporación
 
