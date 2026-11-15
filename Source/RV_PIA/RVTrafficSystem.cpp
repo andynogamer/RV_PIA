@@ -66,6 +66,7 @@ ERVSignalColor ARVTrafficSignal::GetSignalForAxis(bool bXAxis) const
 void ARVTrafficSignal::RefreshLights()
 {
     if (!GetWorld() || !GetWorld()->IsGameWorld()) return;
+    LastVisualPhase=GetPhase();
     if (LampMaterials.Num()!=Lamps.Num())
     {
         LampMaterials.Empty();
@@ -83,10 +84,43 @@ void ARVTrafficSignal::RefreshLights()
         const int32 Active = Signal==ERVSignalColor::Red ? 0 : (Signal==ERVSignalColor::Amber ? 1 : 2);
         if (LampMaterials[Index]) LampMaterials[Index]->SetVectorParameterValue(TEXT("LampColor"), Index%3==Active ? Colors[Active] : FLinearColor(.015f,.015f,.015f));
     }
+    if (CityLampMaterials.Num()!=CityLamps.Num())
+    {
+        CityLampMaterials.Empty();
+        auto* Parent=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/RutaVirtual/Materials/M_TrafficLamp.M_TrafficLamp"));
+        for (const auto& Binding : CityLamps)
+        {
+            UMaterialInstanceDynamic* Material=nullptr;
+            if (Binding.Component)
+            {
+                Binding.Component->SetMaterial(0,Parent);
+                Material=Binding.Component->CreateDynamicMaterialInstance(0);
+            }
+            CityLampMaterials.Add(Material);
+        }
+    }
+    for (int32 Index=0; Index<CityLamps.Num(); ++Index)
+    {
+        const auto& Binding=CityLamps[Index];
+        if (CityLampMaterials[Index]) CityLampMaterials[Index]->SetVectorParameterValue(TEXT("LampColor"),
+            GetSignalForAxis(Binding.bXAxis)==Binding.Color ? Colors[static_cast<int32>(Binding.Color)] : FLinearColor(.015f,.015f,.015f));
+    }
 }
-void ARVTrafficSignal::OnConstruction(const FTransform& Transform) { Super::OnConstruction(Transform); RefreshLights(); }
-void ARVTrafficSignal::BeginPlay() { Super::BeginPlay(); RefreshLights(); }
-void ARVTrafficSignal::Tick(float DeltaTime) { Super::Tick(DeltaTime); RefreshLights(); }
+void ARVTrafficSignal::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+    TArray<UStaticMeshComponent*> Components; GetComponents(Components);
+    for (auto* Component : Components) Component->SetVisibility(CityLamps.IsEmpty());
+    RefreshLights();
+}
+void ARVTrafficSignal::BeginPlay()
+{
+    Super::BeginPlay();
+    TArray<UStaticMeshComponent*> Components; GetComponents(Components);
+    for (auto* Component : Components) Component->SetVisibility(CityLamps.IsEmpty());
+    RefreshLights();
+}
+void ARVTrafficSignal::Tick(float DeltaTime) { Super::Tick(DeltaTime); if (GetPhase()!=LastVisualPhase) RefreshLights(); }
 
 ARVTrafficRoute::ARVTrafficRoute()
 {
@@ -237,6 +271,11 @@ void ARVUrbanScenario::RequestPlayerHorn(AActor* Vehicle)
 {
     if (GetWorld()->GetTimeSeconds()-LastPlayerHornTime<1.f) return;
     LastPlayerHornTime=GetWorld()->GetTimeSeconds(); ++HornEvents; OnHornRequested.Broadcast(Vehicle,TEXT("manual"));
+}
+void ARVUrbanScenario::ResetSessionProgress()
+{
+    RedLightWarnings=0;
+    PreviousApproachDistance.Empty();
 }
 void ARVUrbanScenario::Tick(float DeltaTime)
 {

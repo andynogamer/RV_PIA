@@ -43,6 +43,12 @@
 - Arduino empieza con salida desactivada, límites configurables y apagado ante timeout. No propongas alimentar motores desde un GPIO; verifica placa, actuador, driver y fuente antes de fijar cableado.
 - No inventes resultados físicos, comodidad, eficacia psicológica ni rendimiento en RV. El equipo humano valida montaje, percepción y demostración.
 
+## Tráfico y ampliación urbana
+- La petición de playground amplio, salida estacionada, IA, semáforos, señales y claxon contextual forma parte del alcance vigente: consulta `docs/ENTORNO_URBANO.md`. Conserva `L_CiudadPractica` como circuito corto y regresión.
+- Distingue tráfico cinemático guiado de una simulación completa de conductores. Un evento de claxon sin audio no es un pitido audible.
+- Las luces visibles del cruce deben concordar con el estado que consulta la IA. Verifica también las lámparas decorativas del escenario; no basta probar únicamente el controlador lógico.
+- Ejecuta las pruebas de editor de una en una y espera su informe reciente antes de iniciar otra. No pruebes inyección de entrada mientras una persona conduce o hay una salida física de fuerza activa.
+
 ## Cierre de cada tarea
 1. Ejecuta los checks adecuados de `docs/VALIDACION.md`; registra comando, resultado y límites.
 2. Actualiza `docs/ESTADO.md` y la tarea correspondiente cuando cambie el estado real. Registra decisiones nuevas en `docs/DECISIONES.md`.

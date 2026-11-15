@@ -4,13 +4,21 @@ Estado: arquitectura parcialmente implementada. La base de escritorio ya existe;
 
 ## Implementación actual
 
-El vehículo Blueprint propio deriva de la plantilla Chaos y conserva su física y Enhanced Input. `URVDrivingAssistComponent` aplica reglas de sesión, marcha, velocidad y límites de práctica; `ARVPracticePlayerController` maneja eventos de teclado que siguen disponibles al pausar; `ARVPracticeHUD` presenta instrucciones de escritorio. Python construye assets y ejecuta pruebas de editor; no se usa para gameplay del producto. El suelo y los conos tienen colisión; la ciudad restante es visual. Las secciones siguientes orientan la ampliación, no certifican funciones de hardware.
+El vehículo Blueprint propio deriva de la plantilla Chaos y conserva su física y Enhanced Input. `URVDrivingAssistComponent` aplica reglas de sesión, marcha, velocidad y límites de práctica; `ARVPracticePlayerController` maneja eventos de teclado que siguen disponibles al pausar; `ARVPracticeHUD` presenta instrucciones de escritorio. Python construye assets y ejecuta pruebas de editor; no se usa para gameplay del producto. En el mapa urbano, suelo y 227 mallas de edificios cuentan con colisión. Las secciones siguientes orientan la ampliación, no certifican funciones de hardware.
+
+`RVTrafficSystem.h/.cpp` aporta cuatro actores de ejecución: `ARVTrafficRoute` define un carril mediante spline y su población/velocidad; `ARVTrafficVehicle` sigue esa ruta con movimiento cinemático, barridos de colisión y detección de obstáculos; `ARVTrafficSignal` gobierna dos ejes incompatibles con seis fases; `ARVUrbanScenario` crea población, define límites/objetivos y registra avisos y eventos de claxon. La presencia del escenario activa el modo urbano de la asistencia; su ausencia conserva el circuito corto.
+
+Los autos de tráfico no son vehículos Chaos ni usan navegación de peatones. Frenan según espacio disponible y señal, y solo reaparecen si el inicio está libre y el jugador está a más de 70 m de ambos extremos. Ese criterio usa distancia, no oclusión visual. Los semáforos y el tráfico usan tiempo del mundo y se detienen con la pausa.
+
+Los dos controladores semafóricos enlazan mediante `FRVSignalLampBinding` las lentes originales de la ciudad (rojo/ámbar/verde y eje de circulación). Cambian sus materiales solo en el mundo de juego, sin modificar mallas ni materiales fuente. Cuando existen esos enlaces se ocultan los postes auxiliares del prototipo; los modelos originales siguen visibles y comparten el mismo ciclo que la IA. Los materiales solo se actualizan cuando cambia la fase. Los semáforos de otras zonas sin controlador siguen siendo decorativos.
+
+`OnHornRequested(Vehicle, Reason)` está expuesto a Blueprint tanto en vehículo como escenario. El escenario reúne los eventos; conectar audio a una sola fuente para evitar duplicarlo. `manual` tiene cooldown de 1 s; `player_obstruction` requiere más de 5 s de bloqueo y tiene cooldown de 10 s. No se emite por la espera normal en rojo. Ningún sonido está conectado todavía.
 
 ## Plataforma y organización
 
 Unreal Engine 5.6, Windows PCVR como plataforma provisional. Es la vía inicial para integrar un volante USB con el PC y un visor compatible; confirmar el visor antes de cerrar el objetivo de compilación. No prometer ejecución autónoma en el visor con G920/Arduino conectados al PC.
 
-Contenido nuevo en `/Game/RutaVirtual/`, dividido en Maps, Vehicles, Input, UI, Audio y Data cuando existan assets que lo justifiquen. Material importado en `/Game/Ciudad/`. Lógica C++ futura en `Source/RV_PIA/`; firmware futuro en `Firmware/`. No crear módulos vacíos como prueba de implementación.
+Contenido nuevo en `/Game/RutaVirtual/`, dividido en Maps, Vehicles, Environment, Materials y otras carpetas cuando existan assets que lo justifiquen. Material importado en `/Game/Ciudad/`. Lógica C++ en `Source/RV_PIA/`; firmware futuro en `Firmware/`. No crear módulos vacíos como prueba de implementación.
 
 ## Separación funcional
 
@@ -53,4 +61,4 @@ Mensajes técnicos de conexión, marcha, calibración y eventos en logs. Cualqui
 
 ## Decisiones aún abiertas
 
-Vehículo base; tecnología concreta de FFB; tipo de conexión Arduino; modelo de visor/runtime; frecuencia objetivo; disponibilidad de compilación C++; y ruta del nivel final. Documentar cada elección en `DECISIONES.md` al contar con evidencia.
+Tecnología concreta de FFB; tipo de conexión Arduino; modelo de visor/runtime; frecuencia objetivo; y selección final de recorrido para la demostración. El vehículo base Chaos y compilación C++ ya están comprobados. Documentar decisiones nuevas en `DECISIONES.md`.

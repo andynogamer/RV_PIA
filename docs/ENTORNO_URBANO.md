@@ -17,6 +17,10 @@ El usuario comienza con el vehículo detenido junto a la acera, libera el freno 
 
 Los vehículos pueden usar inicialmente rutas guiadas por splines y carrocerías reutilizadas. Esto representa tráfico autónomo de prototipo, no una simulación completa de conductores humanos ni dinámica Chaos para cada automóvil.
 
+La primera versión está en `/Game/RutaVirtual/Maps/L_CiudadUrbana`: cuatro carriles, 12 agentes y dos controladores semafóricos. Los límites de exploración son 770 × 760 m; el recorrido guiado probado mide 245 m. Las lámparas originales de los dos cruces se enlazan al mismo controlador que consulta la IA (24 lentes en el cruce sur y 12 en el norte); no quedan con su color decorativo fijo en ejecución. El cruce norte se alineó con las señales reales del escenario, cerca de Y=-4850 cm. Las señales fuera de esos cruces todavía son decorativas.
+
+Los eventos de claxon ya se emiten y prueban, pero no producen audio. Las señales ALTO y velocidad son referencias para el jugador; no se implementó todavía un evaluador integral de su cumplimiento. Ver DESARROLLO.md para controles y ESTADO.md para pruebas.
+
 ## Evolución posterior
 
 Rutas conectadas con giros, selección de destinos, cesión de paso al incorporarse, luces de freno/direccionales, densidad regulable, distintos tipos de vehículo y maniobras de estacionamiento. Los pitidos se conectarán a obstrucciones prolongadas en verde o situaciones justificadas, con frecuencia e intensidad moderadas.

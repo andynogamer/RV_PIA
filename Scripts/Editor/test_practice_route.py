@@ -12,6 +12,8 @@ subsystems = [s for s in unreal.ObjectIterator(unreal.EnhancedInputLocalPlayerSu
               if s.get_path_name().startswith('/Engine/Transient.')]
 if not assist or len(subsystems) != 1:
     raise RuntimeError('Expected one player and the training component.')
+if assist.get_editor_property('urban_mode'):
+    raise RuntimeError('Use test_urban_route.py for the urban scenario.')
 movement = car.vehicle_movement_component
 subsystem = subsystems[0]
 actions = {name: unreal.load_asset('/Game/VehicleTemplate/Input/Actions/IA_' + name)

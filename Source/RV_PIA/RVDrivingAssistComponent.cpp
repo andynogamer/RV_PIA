@@ -102,6 +102,7 @@ void URVDrivingAssistComponent::ResetPractice()
     bReverseMode = false;
     PracticeStage = 0;
     UrbanCheckpointIndex = 0;
+    if (UrbanScenario) UrbanScenario->ResetSessionProgress();
     SetStatus(TEXT("Practica reiniciada. Avanza con suavidad."));
 }
 
@@ -142,7 +143,12 @@ FString URVDrivingAssistComponent::GetInstruction() const
     {
         if (PracticeStage==0) return TEXT("Estacionado: pulsa y suelta Espacio para liberar el freno de mano.");
         if (PracticeStage==1) return TEXT("Observa el trafico e incorporate con suavidad al carril.");
-        if (PracticeStage==2) return TEXT("Continua por la ciudad. Respeta semaforos, senales y distancia.");
+        if (PracticeStage==2)
+        {
+            if (UrbanScenario && UrbanCheckpointIndex==UrbanScenario->Checkpoints.Num()-1 && GetDistanceToGoalMeters()<15)
+                return TEXT("Estacionate en la bahia verde y detente para completar el recorrido.");
+            return TEXT("Continua al siguiente objetivo. Respeta semaforos y distancia.");
+        }
         return TEXT("Recorrido urbano completado. Puedes explorar o reiniciar con Home.");
     }
     if (PracticeStage == 0) return TEXT("Avanza despacio entre los conos. Limite: 30 km/h.");
@@ -153,8 +159,17 @@ FString URVDrivingAssistComponent::GetInstruction() const
 FString URVDrivingAssistComponent::GetUrbanSummary() const
 {
     if (!UrbanScenario) return FString();
+    FString Direction;
+    if (Vehicle && PracticeStage>0 && PracticeStage<3 && UrbanScenario->Checkpoints.IsValidIndex(UrbanCheckpointIndex))
+    {
+        const FVector ToGoal=(UrbanScenario->Checkpoints[UrbanCheckpointIndex]-Vehicle->GetActorLocation()).GetSafeNormal2D();
+        const float Ahead=FVector::DotProduct(Vehicle->GetActorForwardVector(),ToGoal);
+        const float Side=FVector::DotProduct(Vehicle->GetActorRightVector(),ToGoal);
+        Direction=Ahead<-.3f ? TEXT(" | Objetivo detras") : FMath::Abs(Side)>.35f ?
+            (Side>0 ? TEXT(" | Hacia derecha") : TEXT(" | Hacia izquierda")) : TEXT(" | Sigue recto");
+    }
     return FString::Printf(TEXT("Ruta %d/%d | Avisos en rojo: %d"),FMath::Min(UrbanCheckpointIndex+1,UrbanScenario->Checkpoints.Num()),
-        UrbanScenario->Checkpoints.Num(),UrbanScenario->RedLightWarnings);
+        UrbanScenario->Checkpoints.Num(),UrbanScenario->RedLightWarnings)+Direction;
 }
 void URVDrivingAssistComponent::RequestHorn()
 {

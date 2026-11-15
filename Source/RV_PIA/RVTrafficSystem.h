@@ -11,6 +11,16 @@ class UMaterialInstanceDynamic;
 UENUM(BlueprintType)
 enum class ERVSignalColor : uint8 { Red, Amber, Green };
 
+/** A lens from the imported city's fixtures, controlled without changing its asset. */
+USTRUCT(BlueprintType)
+struct FRVSignalLampBinding
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") TObjectPtr<UStaticMeshComponent> Component;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") bool bXAxis = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") ERVSignalColor Color = ERVSignalColor::Red;
+};
+
 /** Opposing directions share an axis; conflicting axes never receive green together. */
 UCLASS()
 class RV_PIA_API ARVTrafficSignal : public AActor
@@ -28,12 +38,15 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") float StopLineOffsetCm = 900.f;
     /** -1 automatic; 0 green Y, 1 amber Y, 2 all red, 3 green X, 4 amber X, 5 all red. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") int32 PhaseOverride = -1;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") TArray<FRVSignalLampBinding> CityLamps;
     UFUNCTION(BlueprintPure, Category="Traffic") int32 GetPhase() const;
     UFUNCTION(BlueprintPure, Category="Traffic") ERVSignalColor GetSignalForAxis(bool bXAxis) const;
     UFUNCTION(BlueprintCallable, Category="Traffic") void RefreshLights();
 private:
     UPROPERTY() TArray<TObjectPtr<UStaticMeshComponent>> Lamps;
     UPROPERTY(Transient) TArray<TObjectPtr<UMaterialInstanceDynamic>> LampMaterials;
+    UPROPERTY(Transient) TArray<TObjectPtr<UMaterialInstanceDynamic>> CityLampMaterials;
+    int32 LastVisualPhase = INDEX_NONE;
 };
 
 UCLASS()
@@ -97,6 +110,7 @@ public:
     UPROPERTY(BlueprintAssignable, Category="Urban") FRVHornRequested OnHornRequested;
     UFUNCTION(BlueprintPure, Category="Urban") bool IsInsideBounds(FVector Position) const;
     UFUNCTION(BlueprintCallable, Category="Urban") void RequestPlayerHorn(AActor* Vehicle);
+    UFUNCTION(BlueprintCallable, Category="Urban") void ResetSessionProgress();
 private:
     TMap<TWeakObjectPtr<ARVTrafficSignal>, float> PreviousApproachDistance;
     float LastPlayerHornTime = -100.f;

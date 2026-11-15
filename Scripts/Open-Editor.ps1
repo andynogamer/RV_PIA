@@ -10,8 +10,9 @@ if (@(Get-Process UnrealEditor -ErrorAction SilentlyContinue).Count) {
 }
 $editor = Join-Path $EngineRoot 'Engine\Binaries\Win64\UnrealEditor.exe'
 $project = Join-Path $projectRoot 'RV_PIA.uproject'
-$launchArgs = @(('"' + $project + '"'), '-NoSplash')
+$launchArgs = @(('"' + $project + '"'))
 if ($Map) { $launchArgs += $Map }
+$launchArgs += '-NoSplash'
 if ($EnableAgentBridge) {
     $bridge = Join-Path $PSScriptRoot 'Editor\session_bridge.py'
     $launchArgs += ('-ExecutePythonScript="' + $bridge + '"')

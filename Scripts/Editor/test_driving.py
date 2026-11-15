@@ -21,6 +21,8 @@ movement = car.vehicle_movement_component
 assist = car.get_component_by_class(unreal.RVDrivingAssistComponent)
 if not assist:
     raise RuntimeError('Training assist component is not installed.')
+if assist.get_editor_property('urban_mode'):
+    raise RuntimeError('Run this regression in L_CiudadPractica; use urban tests for L_CiudadUrbana.')
 actions = {name: unreal.load_asset('/Game/VehicleTemplate/Input/Actions/IA_' + name)
            for name in ('Throttle', 'Brake', 'Steering', 'Handbrake')}
 phases = [

@@ -39,6 +39,15 @@ Cada tarea registra fecha, versión/commit cuando exista, comando o pasos, resul
 - Pausa, pérdida de dispositivo, reinicio y salida llevan entrada y hápticos a estado seguro.
 - Instrucciones legibles, actividad guiada completada y sonido ambiente audible sin tapar indicaciones.
 
+## Ampliación urbana en escritorio
+
+- Ejecutar `audit_urban_roads.py`: soporte de suelo y ausencia de obstáculos estáticos con volumen de tráfico a lo largo de los carriles. No sustituye recorrer otras calles o medir suspensión en bordes.
+- En PIE urbano y de forma secuencial, ejecutar `test_urban_traffic.py`, `test_traffic_recycling.py` y `test_urban_route.py`. Esperar su JSON de resultado antes de iniciar otra prueba. Comprobar fecha y `passed=true`; un resultado anterior no valida cambios nuevos.
+- El test de ruta usa física del jugador y desactiva IA temporalmente. El test de tráfico verifica reacción a señales y al jugador por separado; no afirmar por esa combinación que se validaron todas las situaciones de una ciudad real.
+- Confirmar en imagen: inicio estacionado, señalización visible, orientación de autos y lámparas del semáforo coherentes con su fase.
+- Volver a `L_CiudadPractica` y ejecutar `test_driving.py` como regresión tras cambios compartidos. Conservar mapa y assets originales.
+- Claxon: distinguir el evento emitido del sonido audible; hasta conectar y escuchar audio, registrar solo el evento como verificado.
+
 ## RV y hardware reales
 
 - Visor: runtime identificado, imagen estéreo y tracking reales, postura sentada, recentrado, ausencia de movimiento artificial de cabeza obligatorio.

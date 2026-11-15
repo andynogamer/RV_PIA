@@ -24,6 +24,8 @@ Se incorporaron dependencias oficiales de `UE_5.6/Templates/TP_VehicleAdvBP` y s
 
 La cabina y el volante son arte original generado mediante `Scripts/Blender/build_cockpit.py`; fuentes bajo `SourceArt/Cockpit` y resultados en `/Game/RutaVirtual/Vehicles/Interior`. Los conos y carteles reutilizan formas básicas del motor con materiales propios. No se descargaron assets externos en esta implementación.
 
+La ampliación urbana reutiliza `SM_SportsCar`, cristales, ruedas y materiales del pack oficial ya instalado para los agentes de tráfico. El mapa nuevo utiliza copias de 227 mallas originales de ciudad en `/Game/RutaVirtual/Environment/UrbanCollision` con colisión compleja; no se alteran los originales ni su titularidad. Las lámparas de los dos cruces cambian de material en ejecución mediante un material unlit propio; postes, cabezales y lentes conservan sus mallas originales. Se retiraron del mapa nuevo las piezas de vehículos decorativos; los assets siguen disponibles. El uso académico privado no otorga una licencia general para publicar esos recursos.
+
 Audio y publicidad nuevos siguen pendientes. Cada incorporación debe registrar origen, autorización, modificaciones y crédito. El equipo debe distinguir material propio, de terceros y generado con asistencia de IA según las reglas académicas aplicables, sin inventar una política institucional.
 
 ## Registro mínimo por incorporación

@@ -66,7 +66,7 @@ for name,points,count,speed in routes:
     for point in points: spline.add_spline_point(unreal.Vector(*point),unreal.SplineCoordinateSpace.WORLD,False)
     for index in range(len(points)): spline.set_spline_point_type(index,unreal.SplinePointType.LINEAR,False)
     spline.update_spline()
-for name,position,offset in [('Sur',(-9300,-24480,0),0),('Norte',(-9060,-250,0),8)]:
+for name,position,offset in [('Sur',(-9300,-24480,0),0),('Norte',(-9090,-4850,0),8)]:
     signal=actors.spawn_actor_from_class(unreal.RVTrafficSignal,unreal.Vector(*position))
     signal.set_actor_label('Semaforo_Cruce_'+name);signal.set_folder_path('Trafico/Semaforos')
     signal.set_editor_property('cycle_offset',offset);signal.refresh_lights()
@@ -79,7 +79,7 @@ for name,location,scale,material in [
  ('BahiaDestino',(-9650,6500,2),(2.8,6,0.01),green),
  ('LineaRojoSurNorte',(-9500,-25400,3),(3.4,.18,.012),white),
  ('LineaRojoSurSur',(-8950,-23550,3),(3.4,.18,.012),white),
- ('LineaRojoNorte',(-9350,-1170,3),(3.4,.18,.012),white),
+ ('LineaRojoNorte',(-9390,-5770,3),(3.4,.18,.012),white),
  ('LineaRojoEste',(-10200,-24180,3),(.18,3.4,.012),white),
  ('LineaRojoOeste',(-8400,-24780,3),(.18,3.4,.012),white),
 ]:

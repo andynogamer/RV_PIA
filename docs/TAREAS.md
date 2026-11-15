@@ -7,13 +7,16 @@ Fecha objetivo indicada: jueves 19 de noviembre de 2026. Este orden prioriza una
 - [x] **GOV-01 Gobernanza y línea base.** Leer propuesta/rúbrica, registrar estado, alcance y reglas, preparar Git/LFS y herramientas de inventario. Cierre: commit local y checks documentales correctos.
 - [x] **SCN-01 Ensamblar el área demostrable.** Revisar si existe fuente GLTF/GLB con transformaciones originales. Importar escena o reconstruir una zona pequeña sin reimportar destructivamente las mallas. Guardar mapa nuevo bajo `/Game/RutaVirtual/Maps/`; definir calles, límites, escala, suelo, colisiones y punto de inicio. Cierre: recorrido inspeccionado, sin huecos ni caída bajo el suelo, materiales válidos y zona de acción identificable.
 - [x] **VEH-01 Vehículo con teclado.** Seleccionar base física/visual y licencia; verificar cadena C++ si se usará. Implementar posesión, dirección, aceleración, frenado, reversa bloqueada en movimiento, cabina y reinicio. Cierre: avanzar, girar, detener y retroceder en SCN-01, sin depender del visor ni del G920 para desarrollar.
+- [x] **URB-01 Primer playground urbano.** Nuevo mapa separado, inicio estacionado, límites de exploración de 770 × 760 m, colisión de suelo y 227 mallas de edificios, señalización y ruta guiada más extensa. Verificado en editor; no equivale a certificar cada calle de toda el área.
+- [x] **TRA-01 Tráfico autónomo de prototipo.** Cuatro carriles, 12 autos, dos cruces semaforizados con ámbar y separación en rojo, frenado ante vehículos, reanudación y recirculación segura por distancia. Eventos de claxon con espera/cooldown. Validación de escritorio; audio y conducción humana compleja pendientes.
+- [ ] **TRA-02 Evolución de circulación.** Conectar rutas con giros y cesión de paso, variar carrocerías, añadir luces de freno/direccionales y conectar claxon/audio contextual. Cierre: cruces y maniobras probados sin conflictos ni bloqueos permanentes. No cerrar por existir TRA-01.
 - [ ] **SES-01 Práctica guiada y sonido.** Instrucciones, inicio, una maniobra con objetivo observable, pausa/salida/reinicio y sonidos de entorno/vehículo. Cierre: sesión repetible con retroalimentación y sin aceleración/hápticos involuntarios al reiniciar.
 - [ ] **HMD-01 Identificar y probar visor.** Depende del préstamo y datos del modelo; comprobar OpenXR, cámara sentada y recentrado. Cierre: imagen y tracking comprobados dentro del visor, con recorrido funcional.
 - [ ] **G920-01 Integrar volante/pedales.** Depende de recibirlo. Diagnóstico, calibración y mapeo de ejes/botones, pruebas de desconexión. Cierre: mismo comportamiento funcional que teclado con dispositivo real, incluidos pedales en reposo.
 - [ ] **HAP-01 Respuesta háptica congruente.** Seleccionar backend real de fuerza G920 y/o vibración Arduino; implementar evento, intensidad y apagado. Cierre: usuario acciona controles, la simulación responde y genera una sensación física ligada a un evento reproducible; probar pausa y fallo de conexión. Un botón sin respuesta física no cubre este cierre.
 - [ ] **PKG-01 Entrega ejecutable.** Ajustar mapa de juego solo tras verificarlo, cocinar/empaquetar y probar en el PC de demostración con visor y háptico. Cierre: iniciar desde ejecutable sin editor y completar la práctica; conservar logs y plan de recuperación.
 
-Estado del primer prototipo: SCN-01 y VEH-01 verificados en editor el 14 de noviembre. SES-01 tiene instrucciones y objetivos implementados; el sonido sigue pendiente. Colisiones fuera del corredor y validación de hardware permanecen abiertas según ESTADO.md.
+Estado: SCN-01, VEH-01 y primera ampliación URB-01/TRA-01 verificados en editor el 14 de noviembre. SES-01 tiene instrucciones y objetivos implementados; el sonido sigue pendiente. La ciudad tiene colisión ampliada, con límites de cobertura y pruebas documentados en ESTADO.md. Hardware pendiente.
 
 ## P1 — Evidencia y entregables académicos
 
@@ -24,7 +27,7 @@ Estado del primer prototipo: SCN-01 y VEH-01 verificados en editor el 14 de novi
 
 ## P2 — Mejoras que no bloquean el mínimo
 
-- [ ] Tráfico y peatones, condiciones adicionales, espejos optimizados o más recorridos.
+- [ ] Peatones autónomos, condiciones adicionales, espejos optimizados o más recorridos.
 - [ ] Ampliar Arduino con funciones adicionales después de demostrar un háptico estable.
 - [ ] Automatizar más operaciones Blueprint si ofrece ahorro comprobable.
 

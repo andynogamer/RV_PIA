@@ -24,7 +24,7 @@ Estado: criterio de trabajo. Maximizar implementación por agentes con C++/confi
 
 ## D-006 — Circuito corto antes de ciudad completa
 
-Estado: propuesta de priorización por entrega del jueves 19 de noviembre. Resolver un recorrido transitable e inmersivo antes de ampliar tráfico o población. La ciudad tiene una fuente GLTF con escena, de modo que primero debe evaluarse recuperar sus transformaciones originales.
+Estado: primera etapa cumplida; ampliada por D-010 por solicitud posterior del usuario. Se resolvió un circuito corto y se conservará como entrenamiento y regresión. La comprobación en Unreal mostró que las transformaciones de ciudad ya estaban incorporadas en las mallas importadas, por lo que no fue necesario reimportar su fuente GLTF.
 
 ## D-007 — Git local y LFS
 
@@ -41,6 +41,18 @@ Estado: implementado el 14 de noviembre de 2026, autorizado por el usuario al in
 Las pruebas detectaron la reversa automática del freno de plantilla; se desactivó y se agregó selector R con condición de parada y acelerador liberado. El reinicio usa teleport físico y reinicializa el estado asíncrono de Chaos. Se autoriza reiniciar el editor dentro del desarrollo tras comprobar/guardar paquetes, sin descartar trabajo.
 
 El usuario permite recursos externos para uso privado académico. Para esta implementación se usaron recursos oficiales ya instalados y arte original; no se descargaron recursos nuevos ni se hizo push. El remoto `origin` fue configurado por el usuario entre sesiones.
+
+## D-010 — Playground urbano y tráfico autónomo ligero
+
+Estado: primera implementación verificada en editor el 14 de noviembre de 2026. Fuente: petición expresa del usuario de ampliar el playground, comenzar estacionado y sumar IA, señales, semáforos y pitidos contextuales al integrar sonido. Amplía la priorización D-006 sin eliminar los requisitos de RV, G920 y háptico.
+
+Se mantiene separado `L_CiudadUrbana`, con límites de 770 × 760 m, ruta guiada de unos 245 m y tráfico cinemático sobre cuatro splines. Se clonaron 227 mallas para colisión compleja sin alterar los originales y se retiraron del mapa urbano las piezas de autos decorativos que ocupaban los carriles. Los 12 agentes reutilizan carrocerías oficiales instaladas. Dos cruces usan verde/ámbar y separación en rojo para movimientos incompatibles.
+
+La decisión de movimiento cinemático permite tráfico ligero controlable antes de simular cada vehículo con Chaos. No incluye aún giros entre rutas, cesión completa, cambios de carril o conductores humanos realistas. Los claxones se exponen como eventos con espera y cooldown; audio pendiente. La recirculación se protege por ocupación de carril y distancia al jugador, sin afirmar invisibilidad de la reaparición.
+
+La validación detectó bloqueo mutuo entre el inicio de una ruta y el final del carril contrario; se corrigió midiendo ocupación dentro del carril. La clonación segura del mapa usa `new_level_from_template`; la duplicación directa de World provocó un fallo del editor y no se conserva como procedimiento. Ver ESTADO.md para evidencia y límites.
+
+La inspección visual detectó lámparas decorativas fijas que contradecían el controlador. Se enlazaron 36 lentes originales (24 sur, 12 norte), se ocultaron los postes auxiliares y se ubicó el controlador norte en el cruce real del modelo. Las pruebas comprueban ahora correspondencia entre fase lógica y color visible. Los demás semáforos del escenario se mantienen como decoración y requieren integración si se amplían las rutas.
 
 ## Registro de decisiones futuras
 

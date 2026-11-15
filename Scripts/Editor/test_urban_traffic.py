@@ -28,9 +28,17 @@ expected=[(unreal.RVSignalColor.GREEN,unreal.RVSignalColor.RED),
           (unreal.RVSignalColor.RED,unreal.RVSignalColor.AMBER),
           (unreal.RVSignalColor.RED,unreal.RVSignalColor.RED)]
 checks['exclusive_signal_phases']=True
+checks['city_lenses_bound']=all(len(s.city_lamps)>=12 for s in signals)
+checks['visible_lamps_match_cycle']=True
 for phase,pair in enumerate(expected):
     light.phase_override=phase
     checks['exclusive_signal_phases'] &= (light.get_signal_for_axis(False),light.get_signal_for_axis(True))==pair
+    for signal in signals:
+        signal.phase_override=phase;signal.refresh_lights()
+        for binding in signal.city_lamps:
+            color=binding.component.get_material(0).get_vector_parameter_value('LampColor')
+            lit=max(color.r,color.g,color.b)>.1
+            checks['visible_lamps_match_cycle'] &= lit==(signal.get_signal_for_axis(binding.x_axis)==binding.color)
 light.phase_override=-1
 original_offset=light.cycle_offset
 checks['automatic_cycle_order']=True
@@ -42,7 +50,7 @@ for s in signals:s.phase_override=0
 light.phase_override=3
 state={'phase':0,'elapsed':0.0,'enter':True,'records':[],'initial_horns':agent.horn_event_count}
 phases=[('settle',1.5),('parked_throttle',1.2),('release_handbrake',0.3),('released',0.5),
-        ('red',9.0),('green',5.0),('player_block',10.0),('cleared',3.0)]
+        ('red',9.0),('green',5.0),('player_block',10.0),('cleared',3.0),('paused',.5),('resumed',.5)]
 output=Path(unreal.Paths.project_saved_dir())/'AgentReports'/'urban_traffic_test.json'
 
 
@@ -61,6 +69,7 @@ def move_player(position):
 
 def finish(error=None):
     unreal.unregister_slate_post_tick_callback(handle)
+    if unreal.GameplayStatics.is_game_paused(world):assist.toggle_practice_pause()
     for s in signals:s.phase_override=-1
     assist.reset_practice()
     report={'passed':error is None and all(checks.values()),'error':error,'checks':checks,
@@ -90,6 +99,13 @@ def tick(delta):
             if name=='cleared':
                 state['cleared_start']=agent.distance_along_route
                 assist.reset_practice()
+            if name=='paused':
+                state['pause_distance']=agent.distance_along_route
+                state['pause_time']=unreal.GameplayStatics.get_time_seconds(world)
+                assist.toggle_practice_pause()
+            if name=='resumed':
+                assist.toggle_practice_pause()
+                state['resume_distance']=agent.distance_along_route
             state['enter']=False
         inject({'Throttle':1} if name=='parked_throttle' else ({'Handbrake':1} if name=='release_handbrake' else {}))
         state['elapsed']+=min(delta,.05)
@@ -110,9 +126,11 @@ def tick(delta):
             checks['horn_cooldown']=agent.horn_event_count-state['block_horns']<=1
         if name=='cleared':
             checks['resumes_after_obstacle']=agent.distance_along_route>state['cleared_start']+150
-            assist.toggle_practice_pause()
+        if name=='paused':
             checks['pause_applies_to_world']=unreal.GameplayStatics.is_game_paused(world)
-            assist.toggle_practice_pause()
+            checks['traffic_frozen_during_pause']=abs(agent.distance_along_route-state['pause_distance'])<.01
+            checks['signal_clock_frozen_during_pause']=abs(unreal.GameplayStatics.get_time_seconds(world)-state['pause_time'])<.01
+        if name=='resumed':checks['traffic_moves_after_pause']=agent.distance_along_route>state['resume_distance']+20
         state['phase']+=1;state['elapsed']=0;state['enter']=True
         if state['phase']==len(phases):finish()
     except Exception as error:finish(str(error))
