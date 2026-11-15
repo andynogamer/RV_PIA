@@ -34,6 +34,10 @@ Cada tarea registra fecha, versión/commit cuando exista, comando o pasos, resul
 
 ## Conducción y sesión
 
+- Menú: probar `test_session_menu.py` desde el inicio y luego interacción real: Play → Enter sin clic en la escena, botones de controles/volver/inicio, pausa P/M, reinicio, continuación y salida. La captura debe verificarse mediante foco y uso real, no únicamente con `show_mouse_cursor`.
+- Confirmar que abrir inicio/pausa congela tráfico y reloj, que el acelerador queda a cero y que continuar con acelerador sostenido no produce movimiento. Probar el menú también en el circuito corto.
+- En editor, Escape puede terminar PIE; P/M es el atajo estable del menú. El botón de salida debe terminar la prueba sin cerrar Unreal. La salida de un ejecutable empaquetado se valida por separado.
+
 - Dirección izquierda/derecha con centro estable; pedales sueltos sin aceleración; aceleración/frenado previsibles.
 - Reversa solo desde condición segura; botón sostenido no alterna marcha continuamente.
 - Pausa, pérdida de dispositivo, reinicio y salida llevan entrada y hápticos a estado seguro.

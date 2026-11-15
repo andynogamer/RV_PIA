@@ -1,6 +1,6 @@
 # Estado comprobado del proyecto
 
-Fecha: 14 de noviembre de 2026, America/Mexico_City. Hito actual: ciudad ampliada con tráfico autónomo ligero, verificada en el editor de escritorio. No está listo para la entrega final de RV.
+Fecha: 14 de noviembre de 2026, America/Mexico_City. Hito actual: ciudad ampliada con tráfico, menú inicial/pausa y captura de entrada, verificados en editor de escritorio. No está listo para la entrega final de RV.
 
 ## Implementado y comprobado
 
@@ -18,6 +18,8 @@ Fecha: 14 de noviembre de 2026, America/Mexico_City. Hito actual: ciudad ampliad
 - Cuatro rutas de tráfico de aproximadamente 500–560 m, con 12 autos cinemáticos, aceleración/frenado gradual, detección de jugador/vehículos y barridos para evitar atravesar obstáculos. Recirculación condicionada a carril libre y distancia del jugador a ambos extremos mayor de 70 m.
 - Dos cruces semaforizados: 12 s verde, 3 s ámbar, 2 s de separación en rojo por movimiento. Ejes incompatibles nunca comparten verde. Se usan las lentes originales del escenario enlazadas al controlador; las señales auxiliares se ocultan al enlazarlas.
 - Eventos Blueprint de claxon (`manual`, `player_obstruction`) y contador de avisos de rojo. El auto solicita claxon tras más de 5 s bloqueado por el jugador, con 10 s de cooldown y sin hacerlo por esperar en rojo. H solicita evento manual con cooldown de 1 s. **No hay sonido audible conectado todavía.**
+- Menú inicial UMG nativo, centrado y adaptable al tamaño de la vista, con comenzar/controles/salir. Pausa P/M con continuar, reiniciar, volver al inicio y controles. Inicio y pausa detienen física/tráfico y dejan acelerador a cero; el HUD de conducción se oculta mientras está el menú.
+- Cursor visible y foco de botón dentro del menú, captura de ratón/teclado al conducir sin otro clic en la escena. La inicialización espera al layout válido del viewport, que en PIE puede reportar 2 × 2 al primer tick. Se activó GameGetsMouseControl para PIE en la configuración del proyecto y en la preferencia local existente, con copia previa local fuera de Git.
 
 ## Evidencia de validación
 
@@ -31,6 +33,9 @@ Fecha: 14 de noviembre de 2026, America/Mexico_City. Hito actual: ciudad ampliad
 - `test_urban_route.py`: seis comprobaciones correctas mediante Chaos/Enhanced Input. Distancia física observada 245.29 m, cuatro objetivos y estados 0 → 1 → 2 → 3, final detenido, unos 58.3 s simulados. IA desactivada y señales verdes durante esta prueba para aislar la carretera; la interacción de tráfico se prueba por separado. Informe `Saved/AgentReports/urban_route_test.json`, passed=true.
 - Contenido nuevo en carpetas propias y dependencias oficiales en VehicleTemplate, Vehicles e Input. Los originales de ciudad y sala RV se conservan.
 - Regresión posterior a la ampliación: las 15 comprobaciones de `test_driving.py` volvieron a pasar en el circuito corto. Inspección visual de señales originales controladas, postes auxiliares ocultos y circulación en el cruce sur. No se observaron modificaciones de los 1,615 archivos originales de Content por comparación SHA-256. Inventario actual: 1,965 archivos de contenido, 764,055,061 bytes y tres mapas.
+- `test_session_menu.py`: 23 comprobaciones correctas sobre inicio, controles, pausa, retorno, reinicio, cursor, foco real del botón y posición dentro del viewport; acelerador bloqueado y tráfico congelado en menús. Informe `Saved/AgentReports/session_menu_test.json`, passed=true. Pruebas de interfaz: Play → Enter inicia sin clic en escena; P abre pausa; clic en controles, Enter para volver y botón de inicio funcionan. «Salir del simulador» terminó PIE y conservó abierto Unreal. Menús inspeccionados sin texto cortado en el viewport de editor de aproximadamente 1014 × 550 px.
+- Compilaciones Editor/Game Win64 Development actualizadas con UMG/Slate correctas: `Saved/AgentReports/menu_editor_build.log` y `menu_game_build.log`. Esto no valida el contenido cocinado ni empaquetado.
+- Regresión del menú completada: `test_session_menu.py` pasó las 23 comprobaciones en ambos mapas (copias locales `session_menu_urban_test.json` y `session_menu_short_test.json`); las 21 de tráfico y las 15 de conducción volvieron a pasar con el controlador actualizado. Los mapas/Blueprints existentes no requirieron modificaciones para incorporar esta interfaz.
 
 Las pruebas de inyección son herramientas del editor, no lógica Python del producto. Reportes, logs y binarios compilados quedan fuera de Git; los scripts para reproducirlos y el código sí se versionan.
 
@@ -47,7 +52,7 @@ Las pruebas de inyección son herramientas del editor, no lógica Python del pro
 
 ## Repositorio
 
-Base de gobernanza: cd30fcc y 9731d0f; circuito corto: 7c37ebb. El usuario configuró el remoto GitHub origin y guardó un punto de interrupción dbf8944. La ampliación se desarrolla en feature/ciudad-trafico; no se hizo push automático. Consultar git log y git status para el cierre actual.
+Base de gobernanza: cd30fcc y 9731d0f; circuito corto: 7c37ebb; ampliación urbana: d7f496a, después del punto de interrupción dbf8944 del usuario. Menú/captura en feature/menu-sesion. El usuario configuró el remoto GitHub origin; no se hizo push automático. Consultar git log y git status para el cierre actual.
 
 ## Siguiente hito
 

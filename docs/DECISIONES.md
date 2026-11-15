@@ -54,6 +54,12 @@ La validación detectó bloqueo mutuo entre el inicio de una ruta y el final del
 
 La inspección visual detectó lámparas decorativas fijas que contradecían el controlador. Se enlazaron 36 lentes originales (24 sur, 12 norte), se ocultaron los postes auxiliares y se ubicó el controlador norte en el cruce real del modelo. Las pruebas comprueban ahora correspondencia entre fase lógica y color visible. Los demás semáforos del escenario se mantienen como decoración y requieren integración si se amplían las rutas.
 
+## D-011 — Inicio y pausa con interfaz de escritorio
+
+Estado: implementación del 14 de noviembre de 2026, solicitada por el usuario para entrar con el ratón dentro del juego y disponer de menú inicial. Se agrega UMG nativo, sin modificar los mapas/Blueprints existentes. El controlador separa Inicio, Conducción y Pausa; los menús detienen el mundo y la conducción captura la entrada de forma explícita. El foco y posición del cursor se establecen después del layout inicial del viewport para evitar las dimensiones provisionales de PIE.
+
+La configuración predeterminada de PIE activa GameGetsMouseControl y se actualizó también la preferencia local de esta computadora, con copia previa fuera de Git. La interfaz sigue siendo plana; no se presenta como menú de RV validado. Las APIs se contrastaron con los headers instalados de UE 5.6, la compilación y las referencias oficiales de [FInputModeGameOnly](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/FInputModeGameOnly?application_version=5.6) y [UUserWidget](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/UMG/Blueprint/UUserWidget?application_version=5.6). Ver ESTADO.md para resultados.
+
 ## Registro de decisiones futuras
 
 Identificador y título; fecha; estado; problema; evidencia/fuente; decisión; consecuencias; validación; alternativa relevante si explica el costo; condición de revisión. Evitar abrir un registro nuevo por cambios triviales.

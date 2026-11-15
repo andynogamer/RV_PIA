@@ -4,6 +4,8 @@ from pathlib import Path
 import unreal
 
 world=unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_game_world()
+controller=unreal.GameplayStatics.get_player_controller(world,0) if world else None
+if isinstance(controller,unreal.RVPracticePlayerController):controller.start_session()
 if not world: raise RuntimeError('Start urban PIE first.')
 agents=list(unreal.GameplayStatics.get_all_actors_of_class(world,unreal.RVTrafficVehicle))
 agent=next(a for a in agents if a.route.get_actor_label().endswith('_Norte'))

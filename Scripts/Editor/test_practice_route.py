@@ -4,6 +4,8 @@ from pathlib import Path
 import unreal
 
 world = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_game_world()
+controller = unreal.GameplayStatics.get_player_controller(world, 0) if world else None
+if isinstance(controller, unreal.RVPracticePlayerController): controller.start_session()
 car = unreal.GameplayStatics.get_player_pawn(world, 0) if world else None
 if not car:
     raise RuntimeError('Start the city level in PIE first.')

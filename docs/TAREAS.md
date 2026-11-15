@@ -4,6 +4,8 @@ Fecha objetivo indicada: jueves 19 de noviembre de 2026. Este orden prioriza una
 
 ## P0 — Simulación e integración indispensables
 
+- [x] **UI-01 Menú y captura de entrada.** Menú inicial con controles/salida, pausa con continuar/reiniciar/inicio, cursor visible en interfaz y captura automática al conducir. Comprobación funcional en editor; interfaz espacial de RV pendiente. No cierra el sonido de SES-01.
+
 - [x] **GOV-01 Gobernanza y línea base.** Leer propuesta/rúbrica, registrar estado, alcance y reglas, preparar Git/LFS y herramientas de inventario. Cierre: commit local y checks documentales correctos.
 - [x] **SCN-01 Ensamblar el área demostrable.** Revisar si existe fuente GLTF/GLB con transformaciones originales. Importar escena o reconstruir una zona pequeña sin reimportar destructivamente las mallas. Guardar mapa nuevo bajo `/Game/RutaVirtual/Maps/`; definir calles, límites, escala, suelo, colisiones y punto de inicio. Cierre: recorrido inspeccionado, sin huecos ni caída bajo el suelo, materiales válidos y zona de acción identificable.
 - [x] **VEH-01 Vehículo con teclado.** Seleccionar base física/visual y licencia; verificar cadena C++ si se usará. Implementar posesión, dirección, aceleración, frenado, reversa bloqueada en movimiento, cabina y reinicio. Cierre: avanzar, girar, detener y retroceder en SCN-01, sin depender del visor ni del G920 para desarrollar.

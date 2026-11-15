@@ -8,7 +8,7 @@ Entrega indicada por el usuario: jueves 19 de noviembre de 2026, zona America/Me
 
 Existe un prototipo urbano de escritorio en `/Game/RutaVirtual/Maps/L_CiudadUrbana`: salida estacionada, ciudad ampliada, cuatro carriles con 12 autos autónomos de prototipo, dos cruces semaforizados y recorrido guiado de unos 250 metros. Conserva el vehículo Chaos, cabina creada en Blender, límites de velocidad, pausa y reinicio. El circuito de 40 metros (`L_CiudadPractica`) y la sala original de RV se conservan.
 
-Para probar: pulsa Play y haz clic en la vista. Comienzas con freno de mano: pulsa y suelta Espacio para salir. W acelera, S frena, A/D giran, R cambia marcha casi detenido, P pausa e Inicio/Home reinicia. Consulta la [guía de desarrollo y controles](docs/DESARROLLO.md) y el [alcance urbano](docs/ENTORNO_URBANO.md).
+Para probar: pulsa Play y elige «Comenzar práctica» en el menú inicial; el juego captura ratón y teclado automáticamente. Comienzas con freno de mano: pulsa y suelta Espacio para salir. W acelera, S frena, A/D giran, R cambia marcha casi detenido, P/M abre la pausa e Inicio/Home reinicia. El menú permite ver controles, continuar, reiniciar y volver al inicio. Consulta la [guía de desarrollo y controles](docs/DESARROLLO.md) y el [alcance urbano](docs/ENTORNO_URBANO.md).
 
 El G920 está pendiente de llegar y el visor será prestado; su modelo no se conoce. No se han validado periféricos, hápticos ni ejecutable empaquetado. La IA sigue rutas por splines: aún faltan giros entre rutas, maniobras complejas y sonido. Los eventos de claxon están preparados, sin audio conectado. El detalle está en [estado del proyecto](docs/ESTADO.md).
 
@@ -34,4 +34,4 @@ El G920 está pendiente de llegar y el visor será prestado; su modelo no se con
 
 `Scripts/Get-ProjectInventory.ps1` produce un inventario de archivos y configuración sin abrir Unreal. `Scripts/Audit-Unreal.ps1` prepara una auditoría de assets y actores dentro del motor; exige cerrar el editor después de guardar. Su ejecución interna aún debe verificarse en este equipo. Ambas escriben evidencia derivada bajo `Saved/AgentReports/`, fuera de Git.
 
-El repositorio utiliza Git LFS. Ya existe un remoto `origin` configurado por el usuario; la ampliación se prepara en la rama local `feature/ciudad-trafico` y no se sube automáticamente. No se ha otorgado una licencia general de redistribución de los recursos.
+El repositorio utiliza Git LFS. Ya existe un remoto `origin` configurado por el usuario; el menú y captura de entrada se preparan en la rama local `feature/menu-sesion` y no se suben automáticamente. No se ha otorgado una licencia general de redistribución de los recursos.

@@ -16,6 +16,10 @@ Los dos controladores semafóricos enlazan mediante `FRVSignalLampBinding` las l
 
 ## Plataforma y organización
 
+La interfaz de sesión usa `ERVSessionScreen` (Start/Driving/Paused) en el controlador y `URVSessionMenuWidget` construido con UMG nativo. Inicio y pausa detienen el mundo mediante la asistencia, ponen acelerador a cero, muestran el cursor y usan entrada solo de UI. Conducción retira el widget y aplica `FInputModeGameOnly`, captura permanente del ratón y foco al viewport. El widget gestiona botones y navegación, mientras la asistencia conserva la seguridad de pausa/reinicio y liberación del acelerador. El HUD de conducción se oculta mientras está el menú. No hay dependencia del módulo UnrealEd en ejecución.
+
+El inicio del menú espera al primer tick con Pawn/asistencia válidos. La pausa también se sincroniza si otra parte de la simulación llama a la asistencia directamente. La preferencia de PIE `GameGetsMouseControl` acompaña la captura; `DefaultEditorPerProjectUserSettings` no reemplaza preferencias locales ya guardadas. Esta implementación de pantalla plana deberá adaptarse a interacción espacial al integrar RV.
+
 Unreal Engine 5.6, Windows PCVR como plataforma provisional. Es la vía inicial para integrar un volante USB con el PC y un visor compatible; confirmar el visor antes de cerrar el objetivo de compilación. No prometer ejecución autónoma en el visor con G920/Arduino conectados al PC.
 
 Contenido nuevo en `/Game/RutaVirtual/`, dividido en Maps, Vehicles, Environment, Materials y otras carpetas cuando existan assets que lo justifiquen. Material importado en `/Game/Ciudad/`. Lógica C++ en `Source/RV_PIA/`; firmware futuro en `Firmware/`. No crear módulos vacíos como prueba de implementación.

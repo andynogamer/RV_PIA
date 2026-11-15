@@ -2,6 +2,12 @@
 
 ## Ciudad urbana (mapa inicial)
 
+Play abre el menú de RUTA VIRTUAL con cursor visible y el mundo detenido. Puedes elegir «Comenzar práctica», «Ver controles» o «Salir del simulador». El botón principal recibe foco para activarlo también con Enter; Tab permite recorrer opciones. Al comenzar, el cursor se oculta y el juego captura la entrada sin un clic adicional en la carretera.
+
+Durante la conducción, P o M abre la pausa y muestra el cursor. Ofrece continuar, reiniciar, volver al inicio y controles; al reanudar, libera un acelerador que siguiera pulsado. Volver al inicio reinicia vehículo/progreso y deja la simulación en pausa hasta comenzar otra vez. Salir termina PIE durante las pruebas, conservando abierto Unreal; en el juego solicita cerrar la aplicación. Escape mantiene el atajo habitual de terminar PIE en editor; utiliza P/M para probar el menú de pausa. En ejecución independiente Escape también solicita pausa.
+
+`Config/DefaultEditorPerProjectUserSettings.ini` activa `GameGetsMouseControl` como valor inicial para PIE. Las preferencias locales guardadas pueden prevalecer; en esta computadora se actualizó también ese valor local, con copia previa en Saved/AgentReports. Shift+F1 sigue liberando el cursor para usar el editor. Menú y HUD son de escritorio: aún falta interacción espacial y validación con visor.
+
 Nivel: `/Game/RutaVirtual/Maps/L_CiudadUrbana`. Comienzas estacionado con freno de mano aplicado. Pulsa y suelta Espacio, observa el carril e incorpórate. El HUD muestra distancia al siguiente objetivo y orientación aproximada; recorre cuatro objetivos hacia el norte y detente en la bahía verde final. Home reinicia al estacionamiento y limpia los avisos de rojo. Después de completar se permite explorar dentro de los límites.
 
 Hay 12 autos sobre cuatro rutas de unos 500–560 m cada una, y dos cruces con semáforos. La zona delimitada mide 770 × 760 m; esa cifra es el límite de exploración, no la longitud de calles verificadas. El recorrido guiado comprobado con física mide aproximadamente 245 m. Las rutas de tráfico se comprobaron por muestras de suelo y barridos de colisión; no se certificó cada rincón de la ciudad.
@@ -17,7 +23,7 @@ Nivel: `/Game/RutaVirtual/Maps/L_CiudadPractica`. Vehículo compartido: `/Game/R
 ## Probar en Unreal
 
 1. Abrir el proyecto con UE 5.6 y cargar `L_CiudadPractica` si no aparece automáticamente.
-2. Pulsar Play y hacer clic dentro de la vista para capturar teclado.
+2. Pulsar Play y elegir «Comenzar práctica»; la captura de entrada es automática.
 3. Avanzar entre los conos y detenerse en la zona verde al final. Es una práctica corta, sin competición ni límite de tiempo.
 4. Salir de Play con Escape. En editor, Shift+F1 libera el ratón.
 
@@ -28,7 +34,7 @@ Controles de escritorio:
 - A/D o flechas izquierda/derecha: dirección.
 - R: alternar avance y reversa, solo casi detenido y con acelerador liberado.
 - Espacio: freno de mano.
-- P: pausar o continuar.
+- P/M: abrir pausa o continuar. En el menú puedes reiniciar, volver al inicio y consultar controles.
 - Home/Inicio: reiniciar la práctica desde el punto de partida.
 - Tab: alternar cámaras. L: luces del vehículo de plantilla.
 - H: evento de claxon manual en el mapa urbano; audio pendiente.
@@ -39,7 +45,8 @@ Los límites iniciales son 30 km/h en avance y 5 km/h en reversa, con corte de a
 ## Archivos de lógica
 
 - `RVDrivingAssistComponent`: condiciones de cambio de marcha, límite de velocidad, pausa, reinicio, límites por mapa, objetivos de la práctica y volante visual. Detecta el escenario urbano para activar freno inicial y objetivos de mayor alcance.
-- `RVPracticePlayerController`: eventos de teclado R, P, Home y H, incluida reanudación durante pausa. El Blueprint derivado conserva los mapeos Enhanced Input de la plantilla.
+- `RVPracticePlayerController`: estados Inicio/Conducción/Pausa, captura y liberación del cursor, eventos de teclado R, P/M, Home y H. El Blueprint derivado conserva los mapeos Enhanced Input de la plantilla.
+- `RVSessionMenuWidget`: menú UMG nativo con botones, foco de teclado, controles y escalado a la ventana. No necesita un Blueprint nuevo ni lógica Python para ejecutarse.
 - `RVPracticeHUD`: instrucciones y estado para la prueba de escritorio. No es una interfaz de RV validada; adaptar a widgets espaciales al probar el visor.
 - `RVTrafficSystem`: rutas, vehículos autónomos cinemáticos, semáforos y escenario urbano; ver ARQUITECTURA.md.
 
@@ -56,6 +63,8 @@ Orden de construcción desde la base, sin sobrescribir un mapa existente: instal
 Para la ampliación: compilar las clases de tráfico, ejecutar `prepare_traffic_material.py`, `build_urban_scene.py` una sola vez, `polish_urban_scene.py` y `bind_city_signals.py`. Estos assets ya están guardados: no reconstruirlos para probar. El último script enlaza las lentes de los semáforos originales con el ciclo funcional; evita luces decorativas contradictorias en los dos cruces controlados. Los de otras calles aún son decorativos. El mapa se crea con `LevelEditorSubsystem.new_level_from_template`; no duplicar un `World` mediante `EditorAssetLibrary.duplicate_asset` para cargarlo después: esa vía produjo un error de referencias de mundo en UE 5.6 durante el desarrollo.
 
 `test_driving.py` requiere PIE activo, Unreal en primer plano y un único jugador local; inyecta acciones Enhanced Input durante una prueba controlada y deja un JSON en `Saved/AgentReports/driving_test.json`. La reducción de CPU del editor en segundo plano puede invalidar los tiempos de la prueba física. No ejecutarlo mientras una persona conduzca o haya un dispositivo físico de fuerza activo.
+
+Las pruebas de conducción/tráfico comienzan explícitamente la sesión mediante el controlador antes de inyectar acciones. `test_session_menu.py` se ejecuta partiendo del menú inicial: comprueba transiciones, bloqueo de aceleración, pausa del tráfico, cursor y repetición de sesión. Complementar con clics reales y navegación por teclado para verificar foco/captura y legibilidad; su JSON por sí solo no prueba posición física del cursor.
 
 Pruebas urbanas, ejecutadas de una en una con PIE urbano activo y Unreal en primer plano:
 
