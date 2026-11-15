@@ -21,7 +21,13 @@ La documentación de [RawInput 5.6](https://dev.epicgames.com/documentation/en-u
 
 ## Visor prestado
 
-Pendiente: marca, modelo, conexión al PC o modo autónomo, controles disponibles y fecha del préstamo. No asumir Meta Quest aunque existan ajustes de Meta en la plantilla.
+Visor previsto: **Meta Quest 3**, indicado como probable por el usuario el 14 de noviembre de 2026. Falta confirmar préstamo, fecha, controles disponibles y forma de conexión. No registrar el dispositivo como conectado ni probado.
+
+Vía recomendada para este proyecto: Windows PCVR mediante Meta Horizon/Quest Link y OpenXR; mantener G920 y Arduino conectados al PC. Para las primeras pruebas se propone cable compatible, sujeto a disponibilidad y comprobación; la conexión inalámbrica queda como alternativa. No se cambia el destino a Android autónomo por identificar Quest 3.
+
+Siguiente hito propuesto: cámara sentada con mirada independiente y recentrado; menú/HUD espacial con entrada accesible sin ratón; pausa y retorno seguros; luego medición en visor y calibración del volante. El menú actual y las pruebas de monitor no validan esas funciones.
+
+La configuración actual ya habilita OpenXR. Se observó una NVIDIA GeForce RTX 3060 Ti mediante inventario local; no se ha medido rendimiento de esta escena en RV ni se garantiza una frecuencia por el nombre de la GPU. Fuentes oficiales consultadas el 14 de noviembre: [PCVR y cámaras en Unreal, Meta](https://developers.meta.com/vr/documentation/unreal/unreal-engine-basics/) y [requisitos OpenXR UE 5.6, Epic](https://dev.epicgames.com/documentation/en-us/unreal-engine/openxr-prerequisites-in-unreal-engine?application_version=5.6).
 
 Cuando se identifique:
 

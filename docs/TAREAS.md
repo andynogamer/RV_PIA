@@ -37,7 +37,9 @@ Estado: SCN-01, VEH-01 y primera ampliación URB-01/TRA-01 verificados en editor
 
 **Primero:** SCN-01 y VEH-01, mientras el equipo identifica visor, componentes y material académico existente. Pueden avanzar documentos y guion con evidencia ya disponible.
 
-**En cuanto llegue hardware:** diagnóstico de G920 y HMD-01 antes de pulir toda la ciudad. Resolver incompatibilidad de runtime o entrada temprano.
+**Siguiente hito propuesto tras el menú:** preparar cámara sentada/recentrado e interfaz espacial para Quest 3 como visor previsto, manteniendo Windows PCVR y teclado para desarrollo. La confirmación de imagen, tracking, comodidad y rendimiento requiere el visor real.
+
+**En cuanto llegue hardware:** diagnóstico de G920 y HMD-01 antes de pulir toda la ciudad. Resolver incompatibilidad de runtime o entrada temprano. Confirmar préstamo de Quest 3 y disponibilidad de conexión Link.
 
 **Antes de la revisión:** integrar HAP-01, ejecutar PKG-01 y grabar la demostración real. Reservar la última sesión para pruebas y entrega, evitando migraciones de motor o dependencias nuevas innecesarias.
 

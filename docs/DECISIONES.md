@@ -18,6 +18,8 @@ Estado: base vigente. Descriptor 5.6 y registro de sesión 5.6.1. No migrar auto
 
 Estado: propuesta provisional, sujeta al visor. Justificación: volante USB y Arduino en PC. No se ha definido ejecución autónoma Android. Consecuencia: identificar visor y conexión antes de cerrar plataforma, runtime y empaquetado.
 
+Actualización del usuario del 14 de noviembre: probablemente se utilizará Meta Quest 3. Se mantiene como recomendación PCVR por Link/OpenXR, pendiente de confirmar préstamo y conexión. Esta información no demuestra imagen, tracking ni rendimiento en el dispositivo.
+
 ## D-005 — Lógica automatizable y composición Blueprint
 
 Estado: criterio de trabajo. Maximizar implementación por agentes con C++/configuración/herramientas verificables, usar Blueprint para composición y parámetros, sin conversión masiva obligatoria. C++ se incorpora cuando el toolchain esté probado. Python es herramienta de editor, no gameplay del ejecutable.

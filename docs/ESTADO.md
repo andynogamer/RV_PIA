@@ -46,7 +46,7 @@ Las pruebas de inyección son herramientas del editor, no lógica Python del pro
 - Cabina y HUD son prototipos de escritorio. Falta adaptar/verificar interfaz espacial, postura, recentrado y comodidad con visor real.
 - No se han probado G920, force feedback ni Arduino. RawInput está habilitado, pero no se configuró un perfil de ejes por suposición ni se declaró respuesta háptica funcional.
 - Faltan sonido del vehículo/ambiente, medición CPU/GPU en RV y prueba de ejecutable empaquetado. Las compilaciones Editor/Game no demuestran cocina, empaquetado ni funcionamiento en otro equipo.
-- Visor sin identificar. El registro de la base avisaba de runtime OpenXR no disponible; debe verificarse con hardware real.
+- Visor previsto por el usuario: Meta Quest 3, todavía probable y sin prueba de conexión. Se propone Link/OpenXR en PC. El registro de la base avisaba de runtime OpenXR no disponible; debe verificarse con hardware real. La GPU observada es RTX 3060 Ti, sin medición de rendimiento en visor.
 - Se conservó la configuración de render heredada. Claves repetidas, Lumen/ray tracing y opciones Android/Meta no se consideran configuración final.
 - Procedencia/licencia de ciudad pendiente de completar; el usuario autorizó uso privado académico. No se subió este desarrollo a servicios externos desde esta sesión.
 

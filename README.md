@@ -10,7 +10,7 @@ Existe un prototipo urbano de escritorio en `/Game/RutaVirtual/Maps/L_CiudadUrba
 
 Para probar: pulsa Play y elige «Comenzar práctica» en el menú inicial; el juego captura ratón y teclado automáticamente. Comienzas con freno de mano: pulsa y suelta Espacio para salir. W acelera, S frena, A/D giran, R cambia marcha casi detenido, P/M abre la pausa e Inicio/Home reinicia. El menú permite ver controles, continuar, reiniciar y volver al inicio. Consulta la [guía de desarrollo y controles](docs/DESARROLLO.md) y el [alcance urbano](docs/ENTORNO_URBANO.md).
 
-El G920 está pendiente de llegar y el visor será prestado; su modelo no se conoce. No se han validado periféricos, hápticos ni ejecutable empaquetado. La IA sigue rutas por splines: aún faltan giros entre rutas, maniobras complejas y sonido. Los eventos de claxon están preparados, sin audio conectado. El detalle está en [estado del proyecto](docs/ESTADO.md).
+El G920 está pendiente de llegar y el visor previsto es Meta Quest 3, todavía sujeto a confirmación del préstamo y prueba. Se propone Windows PCVR mediante Link/OpenXR. No se han validado periféricos, hápticos ni ejecutable empaquetado. La IA sigue rutas por splines: aún faltan giros entre rutas, maniobras complejas y sonido. Los eventos de claxon están preparados, sin audio conectado. El detalle está en [estado del proyecto](docs/ESTADO.md).
 
 ## Punto de entrada
 
