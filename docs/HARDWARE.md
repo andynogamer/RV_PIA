@@ -42,6 +42,8 @@ Cuando se identifique:
 
 La placa está disponible según el usuario; modelo, motores, driver, fuente y circuito pendientes. No asumir que cualquier Arduino puede presentarse como dispositivo USB HID. Serial USB es un candidato; decidir según placa y latencia observada.
 
+La simulación ahora expone `OnFeedback` con motivo y solicitud de pulso lógico normalizado de 0.15 s, y `OnFeedbackStopped` para cancelar al pausar, reiniciar o terminar. **No se envían datos a Arduino ni fuerza al volante todavía.** El backend futuro debe traducir y limitar esa solicitud después de revisar el montaje; no se debe usar el valor como PWM directo ni dejar una salida sostenida hasta el siguiente evento. Ver SONIDO_Y_RETROALIMENTACION.md.
+
 Definir antes de escribir firmware final:
 
 - Entradas: botón de reversa con antirrebote y cambio por flanco, no por cada frame mientras esté pulsado. Posibilidad de pausa física si el montaje lo permite.

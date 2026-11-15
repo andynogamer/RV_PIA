@@ -19,7 +19,7 @@ Los vehículos pueden usar inicialmente rutas guiadas por splines y carrocerías
 
 La primera versión está en `/Game/RutaVirtual/Maps/L_CiudadUrbana`: cuatro carriles, 12 agentes y dos controladores semafóricos. Los límites de exploración son 770 × 760 m; el recorrido guiado probado mide 245 m. Las lámparas originales de los dos cruces se enlazan al mismo controlador que consulta la IA (24 lentes en el cruce sur y 12 en el norte); no quedan con su color decorativo fijo en ejecución. El cruce norte se alineó con las señales reales del escenario, cerca de Y=-4850 cm. Las señales fuera de esos cruces todavía son decorativas.
 
-Los eventos de claxon ya se emiten y prueban, pero no producen audio. Las señales ALTO y velocidad son referencias para el jugador; no se implementó todavía un evaluador integral de su cumplimiento. Ver DESARROLLO.md para controles y ESTADO.md para pruebas.
+Los eventos de claxon ahora tienen audio. Se agregó un marcador de evaluación para el ALTO de salida y reglas educativas de velocidad, rojo y otras condiciones, con avisos y puntuación; las demás señales decorativas no se convierten automáticamente en reglas. El tráfico añade seguimiento adaptativo, reacción al verde, espera de espacio de salida y luces de freno. Ver SONIDO_Y_RETROALIMENTACION.md, DESARROLLO.md y ESTADO.md para límites y pruebas.
 
 ## Evolución posterior
 

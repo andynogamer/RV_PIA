@@ -10,7 +10,9 @@ Existe un prototipo urbano de escritorio en `/Game/RutaVirtual/Maps/L_CiudadUrba
 
 Para probar: pulsa Play y elige «Comenzar práctica» en el menú inicial; el juego captura ratón y teclado automáticamente. Comienzas con freno de mano: pulsa y suelta Espacio para salir. W acelera, S frena, A/D giran, R cambia marcha casi detenido, P/M abre la pausa e Inicio/Home reinicia. El menú permite ver controles, continuar, reiniciar y volver al inicio. Consulta la [guía de desarrollo y controles](docs/DESARROLLO.md) y el [alcance urbano](docs/ENTORNO_URBANO.md).
 
-El G920 está pendiente de llegar y el visor previsto es Meta Quest 3, todavía sujeto a confirmación del préstamo y prueba. Se propone Windows PCVR mediante Link/OpenXR. No se han validado periféricos, hápticos ni ejecutable empaquetado. La IA sigue rutas por splines: aún faltan giros entre rutas, maniobras complejas y sonido. Los eventos de claxon están preparados, sin audio conectado. El detalle está en [estado del proyecto](docs/ESTADO.md).
+Hay sonido de motor/rodadura/ambiente, claxon y retroalimentación educativa con puntos, avisos y reconocimientos. H activa claxon y V silencia/restaura sonido. Los timbres son síntesis original de prototipo. La IA conserva rutas por splines, con seguimiento, reacción al verde y luces de freno; los giros entre rutas y maniobras complejas siguen pendientes. Ver [sonido y retroalimentación](docs/SONIDO_Y_RETROALIMENTACION.md).
+
+El G920 está pendiente de llegar y el visor previsto es Meta Quest 3, todavía sujeto a confirmación del préstamo y prueba. Se propone Windows PCVR mediante Link/OpenXR. No se han validado periféricos, salida háptica física ni ejecutable empaquetado. El detalle está en [estado del proyecto](docs/ESTADO.md).
 
 ## Punto de entrada
 
@@ -34,4 +36,4 @@ El G920 está pendiente de llegar y el visor previsto es Meta Quest 3, todavía 
 
 `Scripts/Get-ProjectInventory.ps1` produce un inventario de archivos y configuración sin abrir Unreal. `Scripts/Audit-Unreal.ps1` prepara una auditoría de assets y actores dentro del motor; exige cerrar el editor después de guardar. Su ejecución interna aún debe verificarse en este equipo. Ambas escriben evidencia derivada bajo `Saved/AgentReports/`, fuera de Git.
 
-El repositorio utiliza Git LFS. Ya existe un remoto `origin` configurado por el usuario; el menú y captura de entrada se preparan en la rama local `feature/menu-sesion` y no se suben automáticamente. No se ha otorgado una licencia general de redistribución de los recursos.
+El repositorio utiliza Git LFS. Ya existe un remoto `origin` configurado por el usuario; el trabajo de sonido y retroalimentación se prepara en la rama local `feature/audio-retroalimentacion` y no se sube automáticamente. No se ha otorgado una licencia general de redistribución de los recursos.

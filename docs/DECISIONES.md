@@ -50,7 +50,7 @@ Estado: primera implementación verificada en editor el 14 de noviembre de 2026.
 
 Se mantiene separado `L_CiudadUrbana`, con límites de 770 × 760 m, ruta guiada de unos 245 m y tráfico cinemático sobre cuatro splines. Se clonaron 227 mallas para colisión compleja sin alterar los originales y se retiraron del mapa urbano las piezas de autos decorativos que ocupaban los carriles. Los 12 agentes reutilizan carrocerías oficiales instaladas. Dos cruces usan verde/ámbar y separación en rojo para movimientos incompatibles.
 
-La decisión de movimiento cinemático permite tráfico ligero controlable antes de simular cada vehículo con Chaos. No incluye aún giros entre rutas, cesión completa, cambios de carril o conductores humanos realistas. Los claxones se exponen como eventos con espera y cooldown; audio pendiente. La recirculación se protege por ocupación de carril y distancia al jugador, sin afirmar invisibilidad de la reaparición.
+La decisión de movimiento cinemático permite tráfico ligero controlable antes de simular cada vehículo con Chaos. No incluye aún giros entre rutas, cesión completa, cambios de carril o conductores humanos realistas. Los claxones se expusieron como eventos con espera y cooldown; el audio se conectó en D-012. La recirculación se protege por ocupación de carril y distancia al jugador, sin afirmar invisibilidad de la reaparición.
 
 La validación detectó bloqueo mutuo entre el inicio de una ruta y el final del carril contrario; se corrigió midiendo ocupación dentro del carril. La clonación segura del mapa usa `new_level_from_template`; la duplicación directa de World provocó un fallo del editor y no se conserva como procedimiento. Ver ESTADO.md para evidencia y límites.
 
@@ -61,6 +61,14 @@ La inspección visual detectó lámparas decorativas fijas que contradecían el 
 Estado: implementación del 14 de noviembre de 2026, solicitada por el usuario para entrar con el ratón dentro del juego y disponer de menú inicial. Se agrega UMG nativo, sin modificar los mapas/Blueprints existentes. El controlador separa Inicio, Conducción y Pausa; los menús detienen el mundo y la conducción captura la entrada de forma explícita. El foco y posición del cursor se establecen después del layout inicial del viewport para evitar las dimensiones provisionales de PIE.
 
 La configuración predeterminada de PIE activa GameGetsMouseControl y se actualizó también la preferencia local de esta computadora, con copia previa fuera de Git. La interfaz sigue siendo plana; no se presenta como menú de RV validado. Las APIs se contrastaron con los headers instalados de UE 5.6, la compilación y las referencias oficiales de [FInputModeGameOnly](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/FInputModeGameOnly?application_version=5.6) y [UUserWidget](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/UMG/Blueprint/UUserWidget?application_version=5.6). Ver ESTADO.md para resultados.
+
+## D-012 — Audio, tráfico y consecuencias educativas
+
+Solicitud del usuario del 14 de noviembre de 2026: introducir sonido y refinar tráfico, con respuesta negativa ante infracciones/contactos y vibración posterior. Se implementan puntos de seguridad limitados a 0–100, avisos descriptivos, recuperación por acciones cuidadosas y resumen por intento. No se crea ranking, presión por terminar rápido ni afirmación de eficacia terapéutica. Los umbrales son reglas explícitas del prototipo, sin atribución de culpa legal.
+
+Los timbres iniciales son síntesis matemática original, con fuentes reproducibles y seis assets propios. El claxon y los avisos tienen cooldown, mute V y silencio/cancelación al pausar. Se verifica técnicamente el bus de mezcla de Unreal mediante grabación; la escucha con auriculares reales queda separada de esa comprobación.
+
+La retroalimentación expone solicitudes lógicas de pulso de 0.15 s y cancelación al pausar/reiniciar/terminar. No se envía fuerza ni vibración al hardware. Se refinan seguimiento, reacción y espacio de salida del tráfico, conservando splines y declarando pendientes los giros conectados. Ver SONIDO_Y_RETROALIMENTACION.md y ESTADO.md.
 
 ## Registro de decisiones futuras
 

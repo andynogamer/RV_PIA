@@ -8,6 +8,7 @@
 #include "Engine/GameViewportClient.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Engine/World.h"
+#include "RVVehicleAudioComponent.h"
 
 ARVPracticePlayerController::ARVPracticePlayerController()
 {
@@ -124,6 +125,11 @@ void ARVPracticePlayerController::SetupInputComponent()
     InputComponent->BindKey(EKeys::M, IE_Pressed, this, &ARVPracticePlayerController::TogglePracticePause).bExecuteWhenPaused = true;
     InputComponent->BindKey(EKeys::Escape, IE_Pressed, this, &ARVPracticePlayerController::TogglePracticePause).bExecuteWhenPaused = true;
     InputComponent->BindKey(EKeys::H, IE_Pressed, this, &ARVPracticePlayerController::RequestHorn);
+    InputComponent->BindKey(EKeys::V, IE_Pressed, this, &ARVPracticePlayerController::ToggleSound).bExecuteWhenPaused=true;
+}
+void ARVPracticePlayerController::ToggleSound()
+{
+    if (GetPawn()) if (auto* Audio=GetPawn()->FindComponentByClass<URVVehicleAudioComponent>()) Audio->ToggleMute();
 }
 
 void ARVPracticePlayerController::ToggleReverse()

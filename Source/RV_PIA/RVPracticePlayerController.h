@@ -24,6 +24,7 @@ public:
     UFUNCTION(BlueprintCallable, Category="Session") void ShowPauseMenu();
     UFUNCTION(BlueprintCallable, Category="Session") void RestartSession();
     UFUNCTION(BlueprintCallable, Category="Session") void QuitSession();
+    UFUNCTION(BlueprintCallable, Category="Session") void ToggleSound();
 private:
     URVDrivingAssistComponent* GetAssist() const;
     void OpenMenu(bool bPauseMenu);

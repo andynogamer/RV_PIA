@@ -26,7 +26,9 @@ La cabina y el volante son arte original generado mediante `Scripts/Blender/buil
 
 La ampliación urbana reutiliza `SM_SportsCar`, cristales, ruedas y materiales del pack oficial ya instalado para los agentes de tráfico. El mapa nuevo utiliza copias de 227 mallas originales de ciudad en `/Game/RutaVirtual/Environment/UrbanCollision` con colisión compleja; no se alteran los originales ni su titularidad. Las lámparas de los dos cruces cambian de material en ejecución mediante un material unlit propio; postes, cabezales y lentes conservan sus mallas originales. Se retiraron del mapa nuevo las piezas de vehículos decorativos; los assets siguen disponibles. El uso académico privado no otorga una licencia general para publicar esos recursos.
 
-Audio y publicidad nuevos siguen pendientes. Cada incorporación debe registrar origen, autorización, modificaciones y crédito. El equipo debe distinguir material propio, de terceros y generado con asistencia de IA según las reglas académicas aplicables, sin inventar una política institucional.
+Audio: seis WAV originales generados por síntesis matemática con `Scripts/Audio/generate_audio.py`, sin grabaciones descargadas. Fuentes y manifiesto en `SourceAudio/`; paquetes importados en `/Game/RutaVirtual/Audio/`. Son timbres de prototipo de motor, rodadura, ambiente, claxon, impacto y reconocimiento. Los WAV se versionan por LFS. No atribuirlos a un fabricante ni describirlos como grabaciones reales. La grabación de la mezcla de Unreal se guarda como evidencia derivada fuera de Git.
+
+Publicidad nueva sigue pendiente. Cada incorporación debe registrar origen, autorización, modificaciones y crédito. El equipo debe distinguir material propio, de terceros y generado con asistencia de IA según las reglas académicas aplicables, sin inventar una política institucional.
 
 ## Registro mínimo por incorporación
 

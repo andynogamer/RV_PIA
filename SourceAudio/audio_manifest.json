@@ -1,0 +1,42 @@
+{
+  "authoring": "Original mathematical synthesis, prototype timbres.",
+  "sample_rate": 48000,
+  "sounds": [
+    {
+      "name": "S_EngineLoop",
+      "seconds": 2.96,
+      "loop": true,
+      "peak": 0.516055259387316
+    },
+    {
+      "name": "S_RoadLoop",
+      "seconds": 3.96,
+      "loop": true,
+      "peak": 0.3738595067980305
+    },
+    {
+      "name": "S_CityLoop",
+      "seconds": 15.96,
+      "loop": true,
+      "peak": 0.13061651771937705
+    },
+    {
+      "name": "S_Horn",
+      "seconds": 0.42,
+      "loop": false,
+      "peak": 0.4971342464572289
+    },
+    {
+      "name": "S_Impact",
+      "seconds": 0.42,
+      "loop": false,
+      "peak": 0.5398212275992739
+    },
+    {
+      "name": "S_Reward",
+      "seconds": 0.39,
+      "loop": false,
+      "peak": 0.1863907392135274
+    }
+  ]
+}

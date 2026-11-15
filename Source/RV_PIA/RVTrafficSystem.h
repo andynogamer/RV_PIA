@@ -7,6 +7,7 @@ class USplineComponent;
 class UBoxComponent;
 class UStaticMeshComponent;
 class UMaterialInstanceDynamic;
+class UAudioComponent;
 
 UENUM(BlueprintType)
 enum class ERVSignalColor : uint8 { Red, Amber, Green };
@@ -79,6 +80,11 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") float BrakingCmS2 = 300.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") float HornWaitSeconds = 5.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") float HornCooldownSeconds = 10.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") float PreferredSpeedFactor = 1.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") float TimeHeadwaySeconds = 1.4f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") float ReactionDelaySeconds = .5f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Traffic") bool bBrakeLightsOn = true;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Traffic") TObjectPtr<UAudioComponent> EngineAudio;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Traffic") float SpeedCmS = 0.f;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Traffic") FName StopReason = NAME_None;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Traffic") int32 HornEventCount = 0;
@@ -88,8 +94,14 @@ public:
 private:
     UPROPERTY() TObjectPtr<UStaticMeshComponent> Body;
     UPROPERTY() TArray<TObjectPtr<UStaticMeshComponent>> Wheels;
+    UPROPERTY() TArray<TObjectPtr<UStaticMeshComponent>> BrakeLamps;
+    UPROPERTY(Transient) TArray<TObjectPtr<UMaterialInstanceDynamic>> BrakeMaterials;
+    void UpdateBrakeLights();
     float BlockedSeconds = 0.f;
     float LastHornTime = -100.f;
+    float ReactionRemaining = 0.f;
+    bool bWasWaitingAtSignal = false;
+    float WheelSpin = 0.f;
 };
 
 /** Marks an urban map and owns the scenario, bounds and traffic population. */
@@ -112,6 +124,7 @@ public:
     UFUNCTION(BlueprintCallable, Category="Urban") void RequestPlayerHorn(AActor* Vehicle);
     UFUNCTION(BlueprintCallable, Category="Urban") void ResetSessionProgress();
 private:
-    TMap<TWeakObjectPtr<ARVTrafficSignal>, float> PreviousApproachDistance;
+    FVector PreviousPlayerPosition = FVector::ZeroVector;
+    bool bHasPreviousPlayerPosition = false;
     float LastPlayerHornTime = -100.f;
 };

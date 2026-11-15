@@ -14,6 +14,7 @@
 #include "Brushes/SlateColorBrush.h"
 #include "Styling/CoreStyle.h"
 #include "InputCoreTypes.h"
+#include "RVDrivingFeedbackComponent.h"
 
 void URVSessionMenuWidget::Configure(bool bPaused,bool bUrban)
 {
@@ -77,6 +78,10 @@ void URVSessionMenuWidget::BuildMenu()
     AddText(MainPanel,TEXT("Heading"),bPauseMenu ? TEXT("Tómate un respiro.") : TEXT("Tu recorrido empieza aquí."),26,FLinearColor::White,12);
     AddText(MainPanel,TEXT("Description"),bPauseMenu ? TEXT("La práctica y el tráfico están en pausa. Continúa cuando estés listo.") :
         TEXT("Observa el entorno, familiarízate con los controles y practica a tu ritmo. Comenzarás con el vehículo detenido."),17,FLinearColor(.65f,.76f,.81f),26);
+    if (bPauseMenu)
+        if (const auto* PC=Cast<ARVPracticePlayerController>(GetOwningPlayer()))
+            if (PC->GetPawn()) if (const auto* Feedback=PC->GetPawn()->FindComponentByClass<URVDrivingFeedbackComponent>())
+                AddText(MainPanel,TEXT("SessionSummary"),Feedback->GetSummary(),15,FLinearColor(.3f,.85f,.69f),14);
     PrimaryButton=AddButton(MainPanel,TEXT("PrimaryButton"),bPauseMenu ? TEXT("Continuar práctica") : TEXT("Comenzar práctica"),true);
     PrimaryButton->OnClicked.AddDynamic(this,&URVSessionMenuWidget::HandlePrimary);
     if (bPauseMenu)
@@ -88,7 +93,7 @@ void URVSessionMenuWidget::BuildMenu()
     if (!bPauseMenu) AddButton(MainPanel,TEXT("QuitButton"),TEXT("Salir del simulador"))->OnClicked.AddDynamic(this,&URVSessionMenuWidget::HandleQuit);
     ControlsPanel=WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(),TEXT("ControlsPanel"));Stack->AddChild(ControlsPanel);
     AddText(ControlsPanel,TEXT("ControlsHeading"),TEXT("Conoce los controles"),26,FLinearColor::White,18);
-    AddText(ControlsPanel,TEXT("ControlsText"),TEXT("W / ↑  Acelerar     ·     S / ↓  Frenar\nA / D  Girar a izquierda / derecha\nR  Cambiar avance / reversa, estando detenido\nEspacio  Freno de mano (pulsa y suelta para salir)\nP / M  Abrir la pausa     ·     Inicio  Reiniciar\nTab  Cambiar cámara     ·     L  Luces"),17,FLinearColor(.8f,.87f,.9f),20);
+    AddText(ControlsPanel,TEXT("ControlsText"),TEXT("W / ↑  Acelerar     ·     S / ↓  Frenar\nA / D  Girar a izquierda / derecha\nR  Cambiar avance / reversa, estando detenido\nEspacio  Freno de mano (pulsa y suelta para salir)\nP / M  Abrir la pausa     ·     Inicio  Reiniciar\nTab  Cambiar cámara     ·     L  Luces\nH  Claxon     ·     V  Silenciar / restaurar sonido"),17,FLinearColor(.8f,.87f,.9f),20);
     AddText(ControlsPanel,TEXT("ControlsTip"),TEXT("Suelta el acelerador al reanudar. Observa antes de incorporarte, respeta las señales y deja distancia."),16,FLinearColor(.3f,.85f,.69f),20);
     ControlsBackButton=AddButton(ControlsPanel,TEXT("ControlsBackButton"),TEXT("Volver"),true);
     ControlsBackButton->OnClicked.AddDynamic(this,&URVSessionMenuWidget::ToggleControls);
@@ -116,6 +121,11 @@ void URVSessionMenuWidget::HandleQuit() { if (auto* PC=Cast<ARVPracticePlayerCon
 FReply URVSessionMenuWidget::NativeOnPreviewKeyDown(const FGeometry& Geometry,const FKeyEvent& Event)
 {
     const FKey Key=Event.GetKey();
+    if (Key==EKeys::V && !Event.IsRepeat())
+    {
+        if (auto* PC=Cast<ARVPracticePlayerController>(GetOwningPlayer())) PC->ToggleSound();
+        return FReply::Handled();
+    }
     if (Key==EKeys::Enter && HasKeyboardFocus()) { HandlePrimary();return FReply::Handled(); }
     if (Key==EKeys::Escape || Key==EKeys::P || Key==EKeys::M)
     {

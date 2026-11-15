@@ -50,7 +50,15 @@ Cada tarea registra fecha, versión/commit cuando exista, comando o pasos, resul
 - El test de ruta usa física del jugador y desactiva IA temporalmente. El test de tráfico verifica reacción a señales y al jugador por separado; no afirmar por esa combinación que se validaron todas las situaciones de una ciudad real.
 - Confirmar en imagen: inicio estacionado, señalización visible, orientación de autos y lámparas del semáforo coherentes con su fase.
 - Volver a `L_CiudadPractica` y ejecutar `test_driving.py` como regresión tras cambios compartidos. Conservar mapa y assets originales.
-- Claxon: distinguir el evento emitido del sonido audible; hasta conectar y escuchar audio, registrar solo el evento como verificado.
+- Claxon: distinguir evento, señal del mezclador y escucha física con altavoz/auriculares. No convertir un contador de eventos en evidencia acústica.
+
+## Sonido, consecuencias y tráfico refinado
+
+- Ejecutar `test_traffic_refinements.py`: rojo sin obstáculo adicional, retardo de reacción al verde, no entrar con salida ocupada, seguir un precedente móvil/detenido y luces de freno. No valida giros entre rutas ni incorporaciones complejas.
+- Ejecutar `test_driving_feedback.py`: movimiento real para rojo y ALTO, detención correcta, choque contra pared, velocidad sostenida, sentido contrario y distancia. Comprobar límites de puntos, cooldown de contacto, reinicio, recompensa y bloqueo en menús. La solicitud háptica normalizada debe durar como máximo lo establecido, y existir cancelación; no equivale a vibración física.
+- Contacto: no basta llamar manualmente `RegisterIncident`. Probar física real, incluida recreación del estado de Chaos tras reinicio; el detector combina notificaciones de cuerpos con pérdida brusca de velocidad confirmada contra geometría bloqueante. Apoyo en suelo, contacto estacionario y frenado normal no deben acumular penalizaciones.
+- Ejecutar `test_audio_mix.py` dentro del editor y luego `Scripts/Audio/check_recorded_mix.py` con Python externo. Este último exige muestra audible con señal y sin saturación, y silencio en muestras mute/pausa. Registra WAV y métricas fuera de Git. Verificar también variación de tono con régimen y salida de claxon/recompensa; escuchar y ajustar posteriormente con el dispositivo de audio final.
+- Revisar legibilidad del aviso correctivo y resumen de pausa; recompensa reciente no debe borrar un mensaje de error antes de poder leerlo. Evitar spam acústico. Repetir menú/conducción tras modificar componentes compartidos.
 
 ## RV y hardware reales
 

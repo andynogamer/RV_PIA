@@ -1,7 +1,8 @@
 """Integration checks in the urban PIE world. Keep Unreal in the foreground.
 
 Moves the player and a selected traffic agent; do not run during a human session.
-No physical peripheral or audio output is exercised.
+No physical peripheral is exercised. Sound may play; this test asserts horn events,
+not the mixer signal or perceived output (see test_audio_mix.py for mixer capture).
 """
 import json
 from pathlib import Path
@@ -20,6 +21,12 @@ if not scenario or not agents or not signals: raise RuntimeError('Urban traffic 
 light=min(signals,key=lambda s:s.get_actor_location().y)
 route=next(a.route for a in agents if 'Carril_Norte' in a.route.get_actor_label())
 agent=next(a for a in agents if a.route==route)
+# Previous route tests leave traffic at arbitrary distances. Keep this signal/
+# player-obstacle fixture isolated so another agent cannot spawn against or push
+# the parked player. Population is still checked before isolating the actors.
+traffic_snapshot=[(a,a.distance_along_route,a.is_actor_tick_enabled(),a.get_actor_enable_collision()) for a in agents]
+for a in agents:
+    if a!=agent:a.set_actor_tick_enabled(False);a.set_actor_enable_collision(False)
 subsystem=next(s for s in unreal.ObjectIterator(unreal.EnhancedInputLocalPlayerSubsystem) if s.get_path_name().startswith('/Engine/Transient.'))
 actions={n:unreal.load_asset('/Game/VehicleTemplate/Input/Actions/IA_'+n) for n in ['Throttle','Brake','Steering','Handbrake']}
 checks={'urban_mode':assist.get_editor_property('urban_mode'),'population':len(agents)==12,'signal_count':len(signals)==2}
@@ -73,11 +80,13 @@ def finish(error=None):
     unreal.unregister_slate_post_tick_callback(handle)
     if unreal.GameplayStatics.is_game_paused(world):assist.toggle_practice_pause()
     for s in signals:s.phase_override=-1
+    for a,d,ticking,collision in traffic_snapshot:
+        a.teleport_to_distance(d);a.set_actor_enable_collision(collision);a.set_actor_tick_enabled(ticking)
     assist.reset_practice()
     report={'passed':error is None and all(checks.values()),'error':error,'checks':checks,
             'records':state['records'],'traffic_agents':len(agents),
             'method':'PIE physics, native traffic, controlled signal phases and Enhanced Input',
-            'limits':'Prototype guided traffic; no audio, headset or G920 test.'}
+            'limits':'Prototype guided traffic; horn events only, no mixer/perceived audio, headset or G920 validation.'}
     output.write_text(json.dumps(report,indent=2,default=str),encoding='utf-8')
 
 
@@ -109,7 +118,7 @@ def tick(delta):
                 assist.toggle_practice_pause()
                 state['resume_distance']=agent.distance_along_route
             state['enter']=False
-        inject({'Throttle':1} if name=='parked_throttle' else ({'Handbrake':1} if name=='release_handbrake' else {}))
+        inject({'Throttle':1} if name=='parked_throttle' else ({'Handbrake':1} if name=='release_handbrake' else ({'Brake':1} if name=='player_block' else {})))
         state['elapsed']+=min(delta,.05)
         if state['elapsed']<duration:return
         state['records'].append({'phase':name,'agent_speed_kmh':agent.get_speed_kmh(),'distance_cm':agent.distance_along_route,

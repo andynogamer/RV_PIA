@@ -45,6 +45,8 @@ Prioridad: recorrido corto funcional, vehículo controlable, visor real, háptic
 
 Ampliación solicitada el 14 de noviembre: playground urbano mayor, inicio estacionado, incorporación a la circulación, tráfico autónomo, semáforos, señales y comportamiento contextual, incluidos pitidos al integrar sonido. Se incorpora al alcance esperado. La práctica corta se conserva como entrenamiento inicial y prueba de regresión. Ver ENTORNO_URBANO.md para niveles de implementación y aceptación.
 
+Solicitud posterior: sonido y consecuencias ante infracciones/contactos, con vibración futura. Se incorpora una puntuación educativa de seguridad, mensajes correctivos y reconocimientos por conducción cuidadosa, sin clasificación entre personas ni eficacia clínica atribuida. Las consecuencias se basan en reglas explícitas del prototipo y no certifican infracciones legales o culpabilidad. Los detalles y límites están en SONIDO_Y_RETROALIMENTACION.md.
+
 Fuera del mínimo: peatones autónomos complejos, clima dinámico, multijugador, caja manual completa, plataforma móvil, diagnóstico de ansiedad y medición de eficacia terapéutica. No presentar esos elementos como existentes.
 
 ## Pendientes del equipo

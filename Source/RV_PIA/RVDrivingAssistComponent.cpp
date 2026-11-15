@@ -7,6 +7,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "RVTrafficSystem.h"
 #include "EngineUtils.h"
+#include "RVDrivingFeedbackComponent.h"
+#include "RVVehicleAudioComponent.h"
 
 URVDrivingAssistComponent::URVDrivingAssistComponent()
 {
@@ -31,6 +33,16 @@ void URVDrivingAssistComponent::BeginPlay()
     Movement->SetTargetGear(1, true);
     for (TActorIterator<ARVUrbanScenario> It(GetWorld()); It; ++It) { UrbanScenario=*It; bUrbanMode=true; break; }
     if (bUrbanMode) Movement->SetHandbrakeInput(true);
+    if (!GetOwner()->FindComponentByClass<URVDrivingFeedbackComponent>())
+    {
+        auto* Feedback=NewObject<URVDrivingFeedbackComponent>(GetOwner(),TEXT("DrivingFeedback"));
+        GetOwner()->AddInstanceComponent(Feedback);Feedback->RegisterComponent();
+    }
+    if (!GetOwner()->FindComponentByClass<URVVehicleAudioComponent>())
+    {
+        auto* Audio=NewObject<URVVehicleAudioComponent>(GetOwner(),TEXT("DrivingAudio"));
+        GetOwner()->AddInstanceComponent(Audio);Audio->RegisterComponent();
+    }
     TArray<UStaticMeshComponent*> Components;
     Vehicle->GetComponents(Components);
     for (UStaticMeshComponent* Component : Components)
@@ -98,11 +110,13 @@ void URVDrivingAssistComponent::ResetPractice()
     Movement->SetHandbrakeInput(bUrbanMode);
     Movement->SetTargetGear(1, true);
     Movement->SetBrakeInput(0.f);
-    bRequireThrottleRelease = bThrottleWasHeld || bWasPaused;
+    bRequireThrottleRelease = bRequireThrottleRelease || bThrottleWasHeld || bWasPaused;
     bReverseMode = false;
     PracticeStage = 0;
     UrbanCheckpointIndex = 0;
     if (UrbanScenario) UrbanScenario->ResetSessionProgress();
+    if (auto* Feedback=GetOwner()->FindComponentByClass<URVDrivingFeedbackComponent>()) Feedback->ResetSession();
+    if (auto* Audio=GetOwner()->FindComponentByClass<URVVehicleAudioComponent>()) Audio->SilenceTransientSounds();
     SetStatus(TEXT("Practica reiniciada. Avanza con suavidad."));
 }
 
@@ -114,6 +128,8 @@ void URVDrivingAssistComponent::TogglePracticePause()
     Vehicle->GetMesh()->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
     bPracticePaused = !bPracticePaused;
     UGameplayStatics::SetGamePaused(GetWorld(), bPracticePaused);
+    if (auto* Feedback=GetOwner()->FindComponentByClass<URVDrivingFeedbackComponent>()) Feedback->SuspendFeedback();
+    if (bPracticePaused) if (auto* Audio=GetOwner()->FindComponentByClass<URVVehicleAudioComponent>()) Audio->SilenceTransientSounds();
     if (!bPracticePaused)
     {
         Movement->SetBrakeInput(0.f);
@@ -174,6 +190,7 @@ FString URVDrivingAssistComponent::GetUrbanSummary() const
 void URVDrivingAssistComponent::RequestHorn()
 {
     if (UrbanScenario && !bPracticePaused) UrbanScenario->RequestPlayerHorn(GetOwner());
+    else if (!bPracticePaused) if (auto* Audio=GetOwner()->FindComponentByClass<URVVehicleAudioComponent>()) Audio->PlayHorn(GetOwner(),TEXT("manual"));
 }
 
 void URVDrivingAssistComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

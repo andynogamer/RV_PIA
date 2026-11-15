@@ -14,7 +14,9 @@ Hay 12 autos sobre cuatro rutas de unos 500–560 m cada una, y dos cruces con s
 
 Respeta la señalización y deja distancia: los autos frenan y esperan, pero su movimiento es cinemático. No hacen todavía giros entre rutas, adelantamientos ni maniobras de conductores humanos. Las señales físicas ALTO y límite sirven de referencia; no existe aún un evaluador completo de normas. El contador de rojo es una ayuda de prototipo.
 
-H solicita un evento de claxon manual con cooldown de 1 s. Un auto bloqueado por el jugador más de 5 s solicita un claxon contextual, con cooldown de 10 s. **Todavía no se oye:** el evento está preparado para el sistema de sonido posterior. No solicita claxon por esperar correctamente en rojo.
+H activa claxon manual con cooldown de 1 s. Un auto bloqueado por el jugador más de 5 s solicita un claxon contextual, con cooldown de 10 s. No solicita claxon por esperar correctamente en rojo o por no tener espacio para salir del cruce. V silencia/restaura sonido. Motor, rodadura y ambiente son timbres originales de prototipo, con variación de régimen/velocidad y atenuación en el tráfico.
+
+El HUD muestra seguridad (0–100), errores y reconocimientos. Rojo, ALTO de salida, contacto significativo, exceso de velocidad y otras condiciones sostenidas producen mensaje correctivo y descuento; una conducción cuidadosa puede recuperar puntos. La pausa muestra el balance del intento. No es una evaluación clínica ni un reglamento legal completo. Detalles: SONIDO_Y_RETROALIMENTACION.md. No existe vibración física todavía.
 
 ## Circuito corto
 
@@ -37,7 +39,7 @@ Controles de escritorio:
 - P/M: abrir pausa o continuar. En el menú puedes reiniciar, volver al inicio y consultar controles.
 - Home/Inicio: reiniciar la práctica desde el punto de partida.
 - Tab: alternar cámaras. L: luces del vehículo de plantilla.
-- H: evento de claxon manual en el mapa urbano; audio pendiente.
+- H: claxon manual. V: silenciar/restaurar el sonido, también desde los menús.
 - Retroceso conserva la función de enderezar el vehículo de la plantilla; Home es el reinicio completo.
 
 Los límites iniciales son 30 km/h en avance y 5 km/h en reversa, con corte de aceleración. Son parámetros de prototipo y deben comprobarse de nuevo al cambiar física, vehículo o entradas; la prueba final observó picos de aproximadamente 30.6 y 5.33 km/h.
@@ -45,10 +47,12 @@ Los límites iniciales son 30 km/h en avance y 5 km/h en reversa, con corte de a
 ## Archivos de lógica
 
 - `RVDrivingAssistComponent`: condiciones de cambio de marcha, límite de velocidad, pausa, reinicio, límites por mapa, objetivos de la práctica y volante visual. Detecta el escenario urbano para activar freno inicial y objetivos de mayor alcance.
-- `RVPracticePlayerController`: estados Inicio/Conducción/Pausa, captura y liberación del cursor, eventos de teclado R, P/M, Home y H. El Blueprint derivado conserva los mapeos Enhanced Input de la plantilla.
+- `RVPracticePlayerController`: estados Inicio/Conducción/Pausa, captura y liberación del cursor, eventos de teclado R, P/M, Home, H y V. El Blueprint derivado conserva los mapeos Enhanced Input de la plantilla.
 - `RVSessionMenuWidget`: menú UMG nativo con botones, foco de teclado, controles y escalado a la ventana. No necesita un Blueprint nuevo ni lógica Python para ejecutarse.
 - `RVPracticeHUD`: instrucciones y estado para la prueba de escritorio. No es una interfaz de RV validada; adaptar a widgets espaciales al probar el visor.
 - `RVTrafficSystem`: rutas, vehículos autónomos cinemáticos, semáforos y escenario urbano; ver ARQUITECTURA.md.
+- `RVDrivingFeedbackComponent`: reglas de entrenamiento, contacto, puntuación, reconocimientos y eventos para el futuro háptico. `ARVStopRule` marca el ALTO de salida.
+- `RVVehicleAudioComponent`: mezcla de motor/rodadura/ambiente y efectos de claxon, contacto y reconocimiento. Sonidos propios importados por `import_driving_audio.py` desde `SourceAudio/`.
 
 La física y las acciones de conducción básicas provienen de la plantilla oficial Chaos de UE 5.6. La lógica de sesión nueva se ejecuta en C++; Python se utiliza para construir/verificar contenido dentro del editor.
 
@@ -73,10 +77,12 @@ Pruebas urbanas, ejecutadas de una en una con PIE urbano activo y Unreal en prim
 - `test_urban_route.py`: recorrido físico guiado hasta la detención final; oculta y desactiva temporalmente IA y fuerza semáforos verdes para aislar la transitabilidad del recorrido. Restaura al finalizar.
 - `audit_urban_roads.py`: 216 muestras de suelo y barridos con volumen de automóvil a lo largo de cuatro rutas. También funciona en editor sin PIE.
 
+Para audio y consecuencias: `test_traffic_refinements.py`, `test_driving_feedback.py` y `test_audio_mix.py`, secuencialmente. Este último exporta WAV del bus maestro; analizar después con `Scripts/Audio/check_recorded_mix.py`. Reglas, construcción de sonidos y límites en [sonido y retroalimentación](SONIDO_Y_RETROALIMENTACION.md).
+
 `play_current_level.py` inicia PIE conservando PlayerStart. Los scripts de prueba antiguos preparados en `Saved/AgentBridge/tasks` son temporales, pueden referirse al punto de partida anterior y no deben usarse como herramientas permanentes.
 
 ## Límites de esta versión
 
 La zona practicable depende del mapa: corredor acotado en el circuito corto, rectángulo amplio con recuperación fuera de límites en el urbano. El urbano añade colisión compleja en copias de 227 mallas de edificios; accesorios, otras calles y bordes no tienen validación exhaustiva. Los originales permanecen intactos. No presentar la ciudad entera como circuito terminado.
 
-La cabina es una primera malla de referencia creada en Blender, con volante visual. Faltan refinamiento interior, interfaz espacial, sonido, calibración de G920, visor real, hápticos, medición de rendimiento en RV y prueba de ejecutable empaquetado. La prueba de escritorio no cubre esos requisitos.
+La cabina es una primera malla de referencia creada en Blender, con volante visual. Faltan refinamiento interior, interfaz espacial, pulir timbres de sonido, calibración de G920, visor real, hápticos físicos, medición de rendimiento en RV y prueba de ejecutable empaquetado. La prueba de escritorio no cubre esos requisitos.
