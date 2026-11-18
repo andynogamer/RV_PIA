@@ -1,6 +1,7 @@
 #include "RVTrafficSystem.h"
 #include "Components/BoxComponent.h"
 #include "Components/SplineComponent.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/StaticMesh.h"
@@ -67,6 +68,13 @@ ERVSignalColor ARVTrafficSignal::GetSignalForAxis(bool bXAxis) const
     return ERVSignalColor::Red;
 }
 
+bool ARVTrafficSignal::ControlsApproach(const FVector& Direction) const
+{
+    const int32 Approach = FMath::Abs(Direction.X)>FMath::Abs(Direction.Y)
+        ? (Direction.X>0 ? 0 : 1) : (Direction.Y>0 ? 2 : 3);
+    return (ApproachMask & (1 << Approach)) != 0;
+}
+
 void ARVTrafficSignal::RefreshLights()
 {
     if (!GetWorld() || !GetWorld()->IsGameWorld()) return;
@@ -81,7 +89,7 @@ void ARVTrafficSignal::RefreshLights()
             LampMaterials.Add(Lens->CreateDynamicMaterialInstance(0));
         }
     }
-    const FLinearColor Colors[] = {FLinearColor(5,0.02f,0.01f),FLinearColor(5,2.5f,0),FLinearColor(0.01f,4,0.05f)};
+    const FLinearColor Colors[] = {FLinearColor(1.2f,.003f,.002f),FLinearColor(1.8f,.64f,.005f),FLinearColor(.006f,1.5f,.07f)};
     for (int32 Index=0; Index<Lamps.Num(); ++Index)
     {
         const auto Signal = GetSignalForAxis(Index/3>=2);
@@ -197,7 +205,7 @@ void ARVTrafficVehicle::Tick(float DeltaTime)
     if (!Route || !Route->Spline) return;
     const float Dt=FMath::Min(DeltaTime,.05f);
     const FVector Forward=Route->Spline->GetDirectionAtDistanceAlongSpline(DistanceAlongRoute,ESplineCoordinateSpace::World);
-    float Desired=FMath::Clamp(Route->CruiseKmh*PreferredSpeedFactor,5.f,35.f)/.036f;
+    float Desired=FMath::Max(5.f, FMath::Min(Route->CruiseKmh, Route->CruiseKmh*PreferredSpeedFactor))/.036f;
     const float Braking=FMath::Max(100.f,BrakingCmS2);
     StopReason=TEXT("cruise");
     bool SignalStop=false;
@@ -206,7 +214,7 @@ void ARVTrafficVehicle::Tick(float DeltaTime)
         const FVector ToSignal=It->GetActorLocation()-GetActorLocation();
         const float Ahead=FVector::DotProduct(ToSignal,Forward);
         const float Lateral=FMath::Abs(FVector::CrossProduct(Forward,ToSignal).Z);
-        if (Ahead > It->StopLineOffsetCm-100 && Ahead<5000 && Lateral<1300)
+        if (It->ControlsApproach(Forward) && Ahead > It->StopLineOffsetCm-100 && Ahead<5000 && Lateral<1300)
         {
             const auto Signal=It->GetSignalForAxis(FMath::Abs(Forward.X)>FMath::Abs(Forward.Y));
             const float Gap=FMath::Max(0.f,Ahead-It->StopLineOffsetCm-260);
@@ -254,12 +262,14 @@ void ARVTrafficVehicle::Tick(float DeltaTime)
         if (!SignalStop) StopReason=Cast<APawn>(Obstacle.GetActor()) || Cast<ARVTrafficVehicle>(Obstacle.GetActor()) ? TEXT("vehicle") : TEXT("obstacle");
     }
     const float Remaining=Route->Spline->GetSplineLength()-DistanceAlongRoute;
-    if (Remaining<500) { Desired=0; StopReason=TEXT("end"); }
+    if (!Route->Spline->IsClosedLoop() && Remaining<500) { Desired=0; StopReason=TEXT("end"); }
     const bool NewBrakeLights=Desired<SpeedCmS-5 || SpeedCmS<20 || ReactionRemaining>0;
     if (NewBrakeLights!=bBrakeLightsOn) {bBrakeLightsOn=NewBrakeLights;UpdateBrakeLights();}
     const float Rate=Desired<SpeedCmS ? Braking : FMath::Max(50.f,AccelerationCmS2);
     SpeedCmS=FMath::FInterpConstantTo(SpeedCmS,Desired,Dt,Rate);
-    const float Next=FMath::Min(Route->Spline->GetSplineLength(),DistanceAlongRoute+SpeedCmS*Dt);
+    const float Length = Route->Spline->GetSplineLength();
+    const float Advanced = DistanceAlongRoute + SpeedCmS*Dt;
+    const float Next = Route->Spline->IsClosedLoop() && Length > 0.f ? FMath::Fmod(Advanced, Length) : FMath::Min(Length, Advanced);
     FHitResult Contact;
     const FVector Target=Route->Spline->GetLocationAtDistanceAlongSpline(Next,ESplineCoordinateSpace::World);
     SetActorRotation(Forward.Rotation());
@@ -283,7 +293,7 @@ void ARVTrafficVehicle::Tick(float DeltaTime)
         OnHornRequested.Broadcast(this,TEXT("player_obstruction"));
         for (TActorIterator<ARVUrbanScenario> It(GetWorld()); It; ++It) { ++It->HornEvents; It->OnHornRequested.Broadcast(this,TEXT("player_obstruction")); }
     }
-    if (Remaining<500 && SpeedCmS<1)
+    if (!Route->Spline->IsClosedLoop() && Remaining<500 && SpeedCmS<1)
     {
         const APawn* Player=UGameplayStatics::GetPlayerPawn(GetWorld(),0);
         const FVector Beginning=Route->Spline->GetLocationAtDistanceAlongSpline(0,ESplineCoordinateSpace::World);
@@ -298,6 +308,20 @@ void ARVTrafficVehicle::Tick(float DeltaTime)
         }
         if (ClearStart && (!Player || (FVector::Dist(Player->GetActorLocation(),Beginning)>7000 && FVector::Dist(Player->GetActorLocation(),GetActorLocation())>7000))) TeleportToDistance(0);
     }
+}
+
+ARVRoadsidePines::ARVRoadsidePines()
+{
+    SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("Grove")));
+    Trunks = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Trunks"));
+    Crowns = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("Crowns"));
+    for (auto* Component : {Trunks.Get(), Crowns.Get()})
+    {
+        Component->SetupAttachment(RootComponent);
+        Component->SetMobility(EComponentMobility::Static);
+        Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    }
+    RootComponent->SetMobility(EComponentMobility::Static);
 }
 
 ARVUrbanScenario::ARVUrbanScenario()
@@ -350,7 +374,7 @@ void ARVUrbanScenario::Tick(float DeltaTime)
     const bool Continuous=bHasPreviousPlayerPosition && FVector::Dist2D(Position,PreviousPlayerPosition)<500;
     for (TActorIterator<ARVTrafficSignal> It(GetWorld()); It; ++It)
     {
-        if (!Continuous || Velocity.Size2D()<20) continue;
+        if (!Continuous || Velocity.Size2D()<20 || !It->ControlsApproach(Velocity)) continue;
         const bool XAxis=FMath::Abs(Velocity.X)>FMath::Abs(Velocity.Y);
         const FVector Axis=XAxis ? FVector(FMath::Sign(Velocity.X),0,0) : FVector(0,FMath::Sign(Velocity.Y),0);
         const FVector Center=It->GetActorLocation();

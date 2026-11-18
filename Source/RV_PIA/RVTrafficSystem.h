@@ -5,6 +5,7 @@
 
 class USplineComponent;
 class UBoxComponent;
+class UHierarchicalInstancedStaticMeshComponent;
 class UStaticMeshComponent;
 class UMaterialInstanceDynamic;
 class UAudioComponent;
@@ -37,6 +38,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") float ClearanceSeconds = 2.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") float CycleOffset = 0.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") float StopLineOffsetCm = 900.f;
+    /** Bit order: vehicles travelling +X, -X, +Y, -Y. Set from visible city signal heads. */
+    UPROPERTY(EditAnywhere, Category="Traffic", meta=(Bitmask)) int32 ApproachMask = 15;
+    bool ControlsApproach(const FVector& Direction) const;
     /** -1 automatic; 0 green Y, 1 amber Y, 2 all red, 3 green X, 4 amber X, 5 all red. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") int32 PhaseOverride = -1;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Traffic") TArray<FRVSignalLampBinding> CityLamps;
@@ -104,6 +108,17 @@ private:
     float WheelSpin = 0.f;
 };
 
+/** One pair of instanced meshes shares visibility clusters for the roadside pines. */
+UCLASS()
+class RV_PIA_API ARVRoadsidePines : public AActor
+{
+    GENERATED_BODY()
+public:
+    ARVRoadsidePines();
+    UPROPERTY(VisibleAnywhere, Category="Scenery") TObjectPtr<UHierarchicalInstancedStaticMeshComponent> Trunks;
+    UPROPERTY(VisibleAnywhere, Category="Scenery") TObjectPtr<UHierarchicalInstancedStaticMeshComponent> Crowns;
+};
+
 /** Marks an urban map and owns the scenario, bounds and traffic population. */
 UCLASS()
 class RV_PIA_API ARVUrbanScenario : public AActor
@@ -113,6 +128,7 @@ public:
     ARVUrbanScenario();
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Urban", meta=(ClampMin="1")) float PostedSpeedKmh = 50.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Urban") FVector BoundsMin = FVector(-38500,-38000,-150);
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Urban") FVector BoundsMax = FVector(38500,38000,20000);
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Urban") TArray<FVector> Checkpoints;

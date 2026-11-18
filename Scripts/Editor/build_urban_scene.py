@@ -87,16 +87,7 @@ for name,location,scale,material in [
     actor.set_actor_label('Urbano_'+name);actor.set_folder_path('Urbano/Senalizacion')
     actor.static_mesh_component.set_static_mesh(cube);actor.static_mesh_component.set_material(0,material)
     actor.static_mesh_component.set_collision_profile_name('NoCollision');actor.set_actor_scale3d(unreal.Vector(*scale))
-for label,position,body in [
- ('Inicio',(-10150,-17800,190),'SALIDA\nOBSERVA EL TRAFICO'),
- ('Limite',(-10100,-14500,230),'MAXIMO\n30 km/h'),
- ('Estacionamiento',(-9950,6900,190),'ESTACIONAMIENTO\nFIN DEL RECORRIDO'),
- ('AltoLateral',(-10080,-17500,200),'ALTO'),
-]:
-    actor=actors.spawn_actor_from_class(unreal.TextRenderActor,unreal.Vector(*position),unreal.Rotator(pitch=0,yaw=-90,roll=0))
-    actor.set_actor_label('Urbano_Senal_'+label);actor.set_folder_path('Urbano/Senalizacion')
-    text=actor.get_component_by_class(unreal.TextRenderComponent);text.set_text(unreal.Text(body));text.set_world_size(28)
-    text.set_text_render_color(unreal.Color(240,240,240,255))
+# Physical road signs and the northern district are placed by build_road_maps.py.
 unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).set_level_viewport_camera_info(
     unreal.Vector(-9000,-21100,2000),unreal.Rotator(pitch=-20,yaw=90,roll=0))
 levels.save_current_level()

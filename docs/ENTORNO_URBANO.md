@@ -17,7 +17,7 @@ El usuario comienza con el vehículo detenido junto a la acera, libera el freno 
 
 Los vehículos pueden usar inicialmente rutas guiadas por splines y carrocerías reutilizadas. Esto representa tráfico autónomo de prototipo, no una simulación completa de conductores humanos ni dinámica Chaos para cada automóvil.
 
-La primera versión está en `/Game/RutaVirtual/Maps/L_CiudadUrbana`: cuatro carriles, 12 agentes y dos controladores semafóricos. Los límites de exploración son 770 × 760 m; el recorrido guiado probado mide 245 m. Las lámparas originales de los dos cruces se enlazan al mismo controlador que consulta la IA (24 lentes en el cruce sur y 12 en el norte); no quedan con su color decorativo fijo en ejecución. El cruce norte se alineó con las señales reales del escenario, cerca de Y=-4850 cm. Las señales fuera de esos cruces todavía son decorativas.
+La primera versión tenía cuatro carriles y 12 agentes en una zona de 770 × 760 m. Su recorrido guiado medía 245 m y conectaba 36 lentes en dos cruces. La ampliación vigente enlaza las 150 lentes de la ciudad, prolonga la avenida y adelanta la bahía de destino para dejar libre la línea de detención. El recorrido guiado actual mide unos 238 m.
 
 Los eventos de claxon ahora tienen audio. Se agregó un marcador de evaluación para el ALTO de salida y reglas educativas de velocidad, rojo y otras condiciones, con avisos y puntuación; las demás señales decorativas no se convierten automáticamente en reglas. El tráfico añade seguimiento adaptativo, reacción al verde, espera de espacio de salida y luces de freno. Ver SONIDO_Y_RETROALIMENTACION.md, DESARROLLO.md y ESTADO.md para límites y pruebas.
 
@@ -32,3 +32,12 @@ La señalización debe ser congruente dentro del entorno. No afirmar que replica
 Comprobar en ejecución: partida inmóvil, liberación y salida; trayectos mayores que el circuito inicial; circulación por carril; parada y reanudación de IA ante rojo; seguimiento sin superposición; reacción al jugador; pausa conjunta; claxon como evento sin spam; reinicio seguro y conservación del circuito original. Separar resultados probados de funciones todavía previstas en ESTADO.md.
 
 La integración de RV, G920, hápticos y sonido sigue siendo indispensable y no se da por completada al ampliar el tráfico.
+
+
+## Distrito Norte y Sierra del Pino
+
+En la ciudad, sigue la avenida hacia el norte, pasa el letrero del distrito y continúa hasta el ensanchamiento para dar vuelta. El recorrido guiado corto también sigue disponible. El distrito añade 520 m de avenida, banquetas, luminarias, naves industriales y árboles. Dos de los cuatro carriles de tráfico se prolongan hasta allí.
+
+En el menú inicial, **Cambiar a carretera** lleva al apartadero de Sierra del Pino. La carretera de doble sentido forma un circuito de 3,09 km con curvas, desniveles, acotamientos, defensas metálicas y un apartadero para completar la vuelta. Circulan diez vehículos guiados. Las texturas del terreno y el cielo fotográfico proceden de Poly Haven bajo CC0. [Terreno de Rob Tuytel](https://polyhaven.com/a/aerial_grass_rock) y [cielo de Greg Zaal y Jarod Guest](https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky).
+
+Para regenerar la geometría, ejecuta Blender 3.6 con `--background --python Scripts/Blender/build_roads.py`. Desde Unreal y fuera de Play, ejecuta `Scripts/Editor/import_roads.py`, `build_road_maps.py` y `bind_city_signals.py` en la ciudad. Ejecuta después `build_road_maps.py` con el argumento JSON `{"highway":true}` para la carretera. Los mapas y materiales guardados en Content ya funcionan sin ejecutar estos pasos.

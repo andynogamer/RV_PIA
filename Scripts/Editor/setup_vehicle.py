@@ -33,7 +33,7 @@ for handle in sub.k2_gather_subobject_data_for_blueprint(blueprint):
             component.set_editor_property('field_of_view', 85.0)
         camera_settings.append({'name': name, 'cabin_active': is_cabin})
     if isinstance(component, unreal.SpringArmComponent) and name.startswith('FrontSpringArm'):
-        component.set_editor_property('relative_location', unreal.Vector(-35, -32, 105))
+        component.set_editor_property('relative_location', unreal.Vector(-59, -32, 109))
         component.set_editor_property('target_arm_length', 0.0)
         component.set_editor_property('enable_camera_lag', False)
         component.set_editor_property('enable_camera_rotation_lag', False)

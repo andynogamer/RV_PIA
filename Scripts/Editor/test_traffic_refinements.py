@@ -16,7 +16,7 @@ route=agent.route;original_cruise=route.cruise_kmh
 snapshot=[(a,a.distance_along_route,a.preferred_speed_factor) for a in agents]
 for a in agents:a.set_actor_tick_enabled(False);a.set_actor_enable_collision(False)
 agent.set_actor_tick_enabled(True);agent.set_actor_enable_collision(True)
-light=min(signals,key=lambda a:a.get_actor_location().y)
+light=next(s for s in signals if s.get_actor_label()=='Semaforo_Cruce_Sur')
 for s in signals:s.phase_override=0
 light.phase_override=3
 def place(a,y):

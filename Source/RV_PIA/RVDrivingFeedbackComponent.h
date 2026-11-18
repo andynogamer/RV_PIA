@@ -52,7 +52,6 @@ public:
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Feedback") int32 RewardCount=0;
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Feedback") int32 CollisionCount=0;
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Feedback") FRVDrivingFeedback LatestFeedback;
-    UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Feedback") float SpeedLimitKmh=30.f;
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Feedback") float CleanDrivingRewardSeconds=20.f;
     UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Feedback") float MinimumImpactKmh=2.5f;
     UPROPERTY(BlueprintAssignable,Category="Feedback") FRVDrivingFeedbackEvent OnFeedback;

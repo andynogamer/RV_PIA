@@ -6,11 +6,11 @@ Estado: arquitectura parcialmente implementada. La base de escritorio ya existe;
 
 El vehículo Blueprint propio deriva de la plantilla Chaos y conserva su física y Enhanced Input. `URVDrivingAssistComponent` aplica reglas de sesión, marcha, velocidad y límites de práctica; `ARVPracticePlayerController` maneja eventos de teclado que siguen disponibles al pausar; `ARVPracticeHUD` presenta instrucciones de escritorio. Python construye assets y ejecuta pruebas de editor; no se usa para gameplay del producto. En el mapa urbano, suelo y 227 mallas de edificios cuentan con colisión. Las secciones siguientes orientan la ampliación, no certifican funciones de hardware.
 
-`RVTrafficSystem.h/.cpp` aporta cuatro actores de ejecución: `ARVTrafficRoute` define un carril mediante spline y su población/velocidad; `ARVTrafficVehicle` sigue esa ruta con movimiento cinemático, barridos de colisión y detección de obstáculos; `ARVTrafficSignal` gobierna dos ejes incompatibles con seis fases; `ARVUrbanScenario` crea población, define límites/objetivos y registra avisos y eventos de claxon. La presencia del escenario activa el modo urbano de la asistencia; su ausencia conserva el circuito corto.
+`RVTrafficSystem.h/.cpp` aporta cuatro actores de ejecución: `ARVTrafficRoute` define un carril mediante spline y su población/velocidad; `ARVTrafficVehicle` sigue esa ruta con movimiento cinemático, barridos de colisión y detección de obstáculos; `ARVTrafficSignal` gobierna dos ejes incompatibles con seis fases; `ARVUrbanScenario` crea población, define límites/objetivos y registra avisos y eventos de claxon. La presencia del escenario activa el modo urbano de la asistencia; su ausencia conserva el circuito corto. El escenario también define el límite señalizado de la vía abierta. Las dos rutas de la carretera son splines cerradas y continúan al pasar por su origen. La vegetación reutiliza troncos y copas mediante dos componentes de instancias jerárquicas por mapa.
 
 Los autos de tráfico no son vehículos Chaos ni usan navegación de peatones. Frenan según espacio disponible y señal, y solo reaparecen si el inicio está libre y el jugador está a más de 70 m de ambos extremos. Ese criterio usa distancia, no oclusión visual. Los semáforos y el tráfico usan tiempo del mundo y se detienen con la pausa.
 
-Los dos controladores semafóricos enlazan mediante `FRVSignalLampBinding` las lentes originales de la ciudad (rojo/ámbar/verde y eje de circulación). Cambian sus materiales solo en el mundo de juego, sin modificar mallas ni materiales fuente. Cuando existen esos enlaces se ocultan los postes auxiliares del prototipo; los modelos originales siguen visibles y comparten el mismo ciclo que la IA. Los materiales solo se actualizan cuando cambia la fase. Los semáforos de otras zonas sin controlador siguen siendo decorativos.
+Los ocho controladores semafóricos enlazan mediante `FRVSignalLampBinding` las lentes originales de la ciudad (rojo/ámbar/verde y eje de circulación). Cambian sus materiales solo en el mundo de juego, sin modificar mallas ni materiales fuente. Cuando existen esos enlaces se ocultan los postes auxiliares del prototipo; los modelos originales siguen visibles y comparten el mismo ciclo que la IA. Los materiales solo se actualizan cuando cambia la fase. Cada controlador conserva la máscara de accesos derivada de la orientación de las lentes.
 
 `OnHornRequested(Vehicle, Reason)` está expuesto a Blueprint tanto en vehículo como escenario. `URVVehicleAudioComponent` escucha únicamente al escenario para no duplicar claxones. `manual` tiene cooldown de 1 s; `player_obstruction` requiere más de 5 s de bloqueo y tiene cooldown de 10 s. No se emite por la espera normal en rojo o falta de espacio de salida. El reproductor añade un límite global entre claxones.
 
@@ -32,19 +32,21 @@ Contenido nuevo en `/Game/RutaVirtual/`, dividido en Maps, Vehicles, Environment
 
 ### Entrada
 
-Un adaptador por teclado, G920 y Arduino produce acciones lógicas: dirección, acelerador, freno, reversa, pausa y recentrado. La física recibe dirección normalizada en [-1, 1] y pedales en [0, 1], con límites, zona muerta y calibración explícitos.
+El teclado conserva Enhanced Input y la selección de reversa para desarrollo. En Windows, `FRVWheelInput` lee por defecto las entradas etiquetadas de Windows.Gaming.Input con una muestra fechada en el G920 identificado. Un perfil local calibrado selecciona DirectInput. Entrega dirección en [-1, 1], tres pedales en [0, 1] y una marcha entre -1 y 6. La calibración en el HUD registra ejes y posiciones físicas. Arduino queda como complemento de salida o de pausa.
 
-Enhanced Input es el candidato para las acciones del juego. RawInput es el candidato a leer el volante en Windows. Validar su activación real y el mapeo al llegar el G920; no crear perfiles con índices copiados sin medirlos.
+El componente de asistencia consume la muestra antes del movimiento. En modo G920, la pérdida de lectura corta la aceleración y desacopla la transmisión. Al recuperar la señal, arrancar o reanudar, el rearme exige acelerador suelto y admite dos posiciones: N, o una marcha seleccionada con el vehículo detenido y el embrague pisado.
 
 ### Vehículo
 
 Un Pawn de vehículo mantiene estado de marcha, cámara/cabina y componente de movimiento. Evaluar primero Chaos Vehicles y un vehículo base compatible. Las ruedas decorativas de la ciudad no constituyen un rig de Chaos. Antes de elegir el modelo revisar esqueleto, huesos, ruedas, Physics Asset, colisión, escala y licencia.
 
-Evitar una simulación de neumáticos propia para esta entrega. Si no hay un vehículo utilizable, registrar la alternativa y sus límites antes de construirla. Mantener frenado y cambio de marcha deterministas; seleccionar reversa solo casi detenido y con acelerador liberado, con umbrales ajustables y probados.
+Chaos aplica las relaciones de avance y reversa del vehículo de práctica. La palanca selecciona marchas discretas con embrague a fondo y conserva neutral al salir de una posición. El embrague a fondo desacopla mediante neutral en la transmisión física y la zona intermedia modula el acelerador. La selección de reversa requiere estar casi detenido, con protección adicional antes de aplicar par contrario al desplazamiento.
 
 ### Vista de RV
 
 Cabina fija como referencia, origen de tracking y cámara HMD dentro del vehículo. El giro del volante dirige al vehículo; la orientación de cabeza permite mirar de forma independiente. No rotar artificialmente la cámara para simular la mirada. Validar posición sentada, escala, recenter y composición con el visor real.
+
+La cabina añade un cofre y una sección trasera recortados de la carrocería de la plantilla. El cambio de cámara alterna únicamente la visibilidad de las piezas visuales. El cuadro y la consola son superficies del tablero con texturas dibujadas al cambiar los valores. Comparten los pictogramas de la guía de escritorio. Las agujas toman la velocidad y las rpm de Chaos. Los tres retrovisores proyectan la vista reflejada desde el ojo sobre cada cristal y guardan los ángulos individuales en la configuración del jugador.
 
 ### Sesión de práctica
 

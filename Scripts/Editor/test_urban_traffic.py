@@ -18,7 +18,7 @@ scenario=unreal.GameplayStatics.get_actor_of_class(world,unreal.RVUrbanScenario)
 agents=unreal.GameplayStatics.get_all_actors_of_class(world,unreal.RVTrafficVehicle)
 signals=unreal.GameplayStatics.get_all_actors_of_class(world,unreal.RVTrafficSignal)
 if not scenario or not agents or not signals: raise RuntimeError('Urban traffic was not spawned.')
-light=min(signals,key=lambda s:s.get_actor_location().y)
+light=next(s for s in signals if s.get_actor_label()=='Semaforo_Cruce_Sur')
 route=next(a.route for a in agents if 'Carril_Norte' in a.route.get_actor_label())
 agent=next(a for a in agents if a.route==route)
 # Previous route tests leave traffic at arbitrary distances. Keep this signal/
@@ -29,7 +29,7 @@ for a in agents:
     if a!=agent:a.set_actor_tick_enabled(False);a.set_actor_enable_collision(False)
 subsystem=next(s for s in unreal.ObjectIterator(unreal.EnhancedInputLocalPlayerSubsystem) if s.get_path_name().startswith('/Engine/Transient.'))
 actions={n:unreal.load_asset('/Game/VehicleTemplate/Input/Actions/IA_'+n) for n in ['Throttle','Brake','Steering','Handbrake']}
-checks={'urban_mode':assist.get_editor_property('urban_mode'),'population':len(agents)==12,'signal_count':len(signals)==2}
+checks={'urban_mode':assist.get_editor_property('urban_mode'),'population':len(agents)==12,'signal_count':len(signals)==8}
 expected=[(unreal.RVSignalColor.GREEN,unreal.RVSignalColor.RED),
           (unreal.RVSignalColor.AMBER,unreal.RVSignalColor.RED),
           (unreal.RVSignalColor.RED,unreal.RVSignalColor.RED),
@@ -37,7 +37,7 @@ expected=[(unreal.RVSignalColor.GREEN,unreal.RVSignalColor.RED),
           (unreal.RVSignalColor.RED,unreal.RVSignalColor.AMBER),
           (unreal.RVSignalColor.RED,unreal.RVSignalColor.RED)]
 checks['exclusive_signal_phases']=True
-checks['city_lenses_bound']=all(len(s.city_lamps)>=12 for s in signals)
+checks['city_lenses_bound']=sum(len(s.city_lamps) for s in signals)==150 and all(s.city_lamps for s in signals)
 checks['visible_lamps_match_cycle']=True
 for phase,pair in enumerate(expected):
     light.phase_override=phase

@@ -110,7 +110,7 @@ void URVDrivingFeedbackComponent::TickComponent(float Dt,ELevelTick Type,FActorC
             RegisterIncident(TEXT("collision"));
     }
     Dt=FMath::Min(Dt,.1f);
-    OverspeedSeconds=Speed>SpeedLimitKmh+2 ? OverspeedSeconds+Dt : 0;
+    OverspeedSeconds=Speed>Assist->GetPostedSpeedKmh()+2 ? OverspeedSeconds+Dt : 0;
     if (OverspeedSeconds>2.5f) RegisterIncident(TEXT("overspeed"));
 
     // Headway warning requires sustained proximity while actually moving forward.
@@ -132,7 +132,7 @@ void URVDrivingFeedbackComponent::TickComponent(float Dt,ELevelTick Type,FActorC
         const bool XAxis=FMath::Abs(Forward.X)>FMath::Abs(Forward.Y);
         const FVector Axis=XAxis ? FVector(FMath::Sign(Forward.X),0,0) : FVector(0,FMath::Sign(Forward.Y),0);
         const float Gap=FVector::DotProduct(To,Axis)-S->StopLineOffsetCm-230;
-        if (Gap>=0 && Gap<650 && FMath::Abs(FVector::CrossProduct(Axis,To).Z)<1000 && Speed<.5f && S->GetSignalForAxis(XAxis)==ERVSignalColor::Red)
+        if (S->ControlsApproach(Forward) && Gap>=0 && Gap<650 && FMath::Abs(FVector::CrossProduct(Axis,To).Z)<1000 && Speed<.5f && S->GetSignalForAxis(XAxis)==ERVSignalColor::Red)
         {
             float& Held=StopTimers.FindOrAdd(*S);Held+=Dt;
             if (Held>1 && !RewardedStops.Contains(*S)) {RewardedStops.Add(*S);Reward(TEXT("safe_stop"),TEXT("Buena detencion en rojo. Espera el verde y observa antes de avanzar."),3);}

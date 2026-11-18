@@ -5,6 +5,10 @@ public class RV_PIA : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "InputCore", "ChaosVehicles", "UMG" });
-        PrivateDependencyModuleNames.AddRange(new[] { "Slate", "SlateCore" });
+        PrivateDependencyModuleNames.AddRange(new[] { "Slate", "SlateCore", "XRBase" });
+        if (Target.Platform == UnrealTargetPlatform.Win64)
+        {
+            PublicSystemLibraries.AddRange(new[] { "dinput8.lib", "dxguid.lib", "runtimeobject.lib" });
+        }
     }
 }

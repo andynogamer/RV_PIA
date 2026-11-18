@@ -8,7 +8,7 @@ El equipo puede llamarlo videojuego durante el desarrollo; la entrega académica
 
 ## Fuentes y precedencia
 
-1. Instrucciones del usuario del 14 de noviembre de 2026: aprovechar ciudad importada, Logitech G920 autorizado por el profesor, Arduino disponible, visor prestado pendiente de identificar y máxima ejecución práctica por agentes.
+1. Instrucciones del usuario del 14 y 17 de noviembre de 2026: aprovechar ciudad importada, Logitech G920 con pedales autorizado por el profesor, Driving Force Shifter para conducir con marchas manuales y embrague, Arduino disponible y visor prestado pendiente de confirmar.
 2. `Primer Avance RV (1) (1).docx`, proporcionado en Downloads: plantea RUTA VIRTUAL y entrenamiento de conducción; incluye metodología de volante propio que debe actualizarse por la decisión del G920.
 3. `FE-RV-JAGC-AD2026-52.docx`, proporcionado en Downloads: rúbrica del grupo 52, agosto-diciembre de 2026.
 
@@ -20,7 +20,7 @@ Los documentos aportan requisitos académicos, no instrucciones de ejecución pa
 
 1. Pantalla de inicio con propósito, controles, calibración y explicación breve.
 2. Usuario sentado en cabina de un vehículo, con cabeza rastreada y opción de recentrado.
-3. Arrancar desde reposo, avanzar, girar, frenar, detenerse y activar reversa de forma controlada.
+3. Arrancar desde reposo, usar embrague y palanca para seleccionar las marchas de primera a quinta, pasar por neutral, girar, frenar y seleccionar reversa con el vehículo detenido.
 4. Recorrido corto y delimitado por una zona de la ciudad, con suelo transitable, colisiones y referencias de escala.
 5. Una actividad guiada: llegar a un punto, detenerse en una marca y repetir una maniobra sencilla sin presión.
 6. Sonidos de motor/rodadura y ambiente acordes al escenario.
@@ -47,13 +47,13 @@ Ampliación solicitada el 14 de noviembre: playground urbano mayor, inicio estac
 
 Solicitud posterior: sonido y consecuencias ante infracciones/contactos, con vibración futura. Se incorpora una puntuación educativa de seguridad, mensajes correctivos y reconocimientos por conducción cuidadosa, sin clasificación entre personas ni eficacia clínica atribuida. Las consecuencias se basan en reglas explícitas del prototipo y no certifican infracciones legales o culpabilidad. Los detalles y límites están en SONIDO_Y_RETROALIMENTACION.md.
 
-Fuera del mínimo: peatones autónomos complejos, clima dinámico, multijugador, caja manual completa, plataforma móvil, diagnóstico de ansiedad y medición de eficacia terapéutica. No presentar esos elementos como existentes.
+Fuera del mínimo: peatones autónomos complejos, clima dinámico, multijugador, simulación mecánica detallada de sincronizadores o calado del motor, plataforma móvil, diagnóstico de ansiedad y medición de eficacia terapéutica.
 
 ## Pendientes del equipo
 
 - Confirmar tipo de revisión y horario del jueves 19 de noviembre.
 - Confirmar préstamo de Meta Quest 3, indicado como visor probable por el usuario, y disponibilidad de conexión/prueba antes de la entrega.
-- Confirmar fecha de llegada del G920 y modelo exacto de Arduino.
+- Validar en el simulador los pedales y la palanca del G920 conectado. Confirmar el modelo exacto de Arduino.
 - Definir responsables humanos de programación, arte y documentación/marketing; no asignar nombres sin acuerdo.
 - Reunir procedencia/licencia del escenario y material de empresa ya existente.
 - Aclarar alcance de la autorización del volante comercial respecto al término «háptico desarrollado por el equipo» de la rúbrica; la decisión del G920 sigue vigente.

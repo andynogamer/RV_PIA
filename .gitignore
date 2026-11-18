@@ -1,6 +1,7 @@
 # Unreal: generated files. Preserve Config, Content, Source, Build and plugins' source.
 /Binaries/
 /DerivedDataCache/
+/Build/Windows/FileOpenOrder/*.log
 /Intermediate/
 /Saved/
 **/Intermediate/

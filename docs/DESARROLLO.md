@@ -2,7 +2,7 @@
 
 ## Ciudad urbana (mapa inicial)
 
-Play abre el menú de RUTA VIRTUAL con cursor visible y el mundo detenido. Puedes elegir «Comenzar práctica», «Ver controles» o «Salir del simulador». El botón principal recibe foco para activarlo también con Enter; Tab permite recorrer opciones. Al comenzar, el cursor se oculta y el juego captura la entrada sin un clic adicional en la carretera.
+Play abre el menú de RUTA VIRTUAL con cursor visible y el mundo detenido. Puedes elegir «Comenzar práctica», «Cambiar a carretera», «Ver controles» o «Salir del simulador». El botón principal recibe foco para activarlo también con Enter; Tab permite recorrer opciones. Al comenzar, el cursor se oculta y el juego captura la entrada sin un clic adicional en la carretera.
 
 Durante la conducción, P o M abre la pausa y muestra el cursor. Ofrece continuar, reiniciar, volver al inicio y controles; al reanudar, libera un acelerador que siguiera pulsado. Volver al inicio reinicia vehículo/progreso y deja la simulación en pausa hasta comenzar otra vez. Salir termina PIE durante las pruebas, conservando abierto Unreal; en el juego solicita cerrar la aplicación. Escape mantiene el atajo habitual de terminar PIE en editor; utiliza P/M para probar el menú de pausa. En ejecución independiente Escape también solicita pausa.
 
@@ -10,7 +10,7 @@ Durante la conducción, P o M abre la pausa y muestra el cursor. Ofrece continua
 
 Nivel: `/Game/RutaVirtual/Maps/L_CiudadUrbana`. Comienzas estacionado con freno de mano aplicado. Pulsa y suelta Espacio, observa el carril e incorpórate. El HUD muestra distancia al siguiente objetivo y orientación aproximada; recorre cuatro objetivos hacia el norte y detente en la bahía verde final. Home reinicia al estacionamiento y limpia los avisos de rojo. Después de completar se permite explorar dentro de los límites.
 
-Hay 12 autos sobre cuatro rutas de unos 500–560 m cada una, y dos cruces con semáforos. La zona delimitada mide 770 × 760 m; esa cifra es el límite de exploración, no la longitud de calles verificadas. El recorrido guiado comprobado con física mide aproximadamente 245 m. Las rutas de tráfico se comprobaron por muestras de suelo y barridos de colisión; no se certificó cada rincón de la ciudad.
+Hay 12 autos sobre cuatro rutas y ocho cruces con semáforos. Los dos carriles norte-sur se prolongan por el Distrito Norte. El recorrido guiado hasta la bahía final mide unos 238 m. Se puede seguir explorando al terminar.
 
 Respeta la señalización y deja distancia: los autos frenan y esperan, pero su movimiento es cinemático. No hacen todavía giros entre rutas, adelantamientos ni maniobras de conductores humanos. Las señales físicas ALTO y límite sirven de referencia; no existe aún un evaluador completo de normas. El contador de rojo es una ayuda de prototipo.
 
@@ -34,7 +34,11 @@ Controles de escritorio:
 - W o flecha arriba: acelerar en la marcha seleccionada.
 - S o flecha abajo: frenar. El freno no selecciona reversa.
 - A/D o flechas izquierda/derecha: dirección.
-- R: alternar avance y reversa, solo casi detenido y con acelerador liberado.
+- R: alternar avance y reversa con teclado, solo casi detenido y con acelerador liberado.
+- B elige el retrovisor izquierdo, central o derecho con el coche detenido en vista interior. Ajusta con flechas. Enter termina o pulsa B después del derecho. El perfil automático también admite ambas levas juntas para seleccionar y la cruceta para ajustar. La orientación se guarda en la configuración local. En escritorio la cámara gira desde el asiento hacia el espejo; en RV se mantiene el control de la cabeza.
+- G oculta o muestra las instrucciones de conducción. La tarjeta inicial se recoge al superar 4 km/h y la guía manual se puede recuperar en marcha.
+- J: calibrar G920 y Driving Force Shifter con el vehículo detenido. Enter registra cada posición indicada en el HUD. K cambia entre teclado y G920 detenido.
+- El modo G920 se activa automáticamente con G HUB y la práctica en primer plano. La palanca selecciona 1–5, N o R. La posición 6 acciona la reversa sin hundir la palanca. Pisa el embrague a fondo para cambiar. Si la palanca llegó primero, déjala en la marcha y pisa el pedal. Para un cambio de sentido rechazado en movimiento, detente y vuelve a N. Consulta [los pasos de calibración](HARDWARE.md).
 - Espacio: freno de mano.
 - P/M: abrir pausa o continuar. En el menú puedes reiniciar, volver al inicio y consultar controles.
 - Home/Inicio: reiniciar la práctica desde el punto de partida.
@@ -42,7 +46,7 @@ Controles de escritorio:
 - H: claxon manual. V: silenciar/restaurar el sonido, también desde los menús.
 - Retroceso conserva la función de enderezar el vehículo de la plantilla; Home es el reinicio completo.
 
-Los límites iniciales son 30 km/h en avance y 5 km/h en reversa, con corte de aceleración. Son parámetros de prototipo y deben comprobarse de nuevo al cambiar física, vehículo o entradas; la prueba final observó picos de aproximadamente 30.6 y 5.33 km/h.
+El circuito de conos conserva el corte de 30 km/h y la protección de reversa es de 5 km/h. En la ciudad y la carretera el límite señalizado es de 50 y 80 km/h, respectivamente. Superarlo de forma sostenida genera un aviso. En las vías abiertas se midieron picos de 59,2 km/h en ciudad y 87,5 km/h en carretera.
 
 ## Archivos de lógica
 
@@ -64,7 +68,7 @@ La física y las acciones de conducción básicas provienen de la plantilla ofic
 
 Orden de construcción desde la base, sin sobrescribir un mapa existente: instalar recursos con `Install-VehicleTemplate.ps1`, ejecutar `build_city.py`, `setup_vehicle.py`, `import_cockpit.py`, `configure_runtime.py` y `build_training_route.py` dentro del editor. Los plugins y el módulo deben estar habilitados/compilados primero. Las fuentes importadas y los assets resultantes ya están incluidos en el repositorio.
 
-Para la ampliación: compilar las clases de tráfico, ejecutar `prepare_traffic_material.py`, `build_urban_scene.py` una sola vez, `polish_urban_scene.py` y `bind_city_signals.py`. Estos assets ya están guardados: no reconstruirlos para probar. El último script enlaza las lentes de los semáforos originales con el ciclo funcional; evita luces decorativas contradictorias en los dos cruces controlados. Los de otras calles aún son decorativos. El mapa se crea con `LevelEditorSubsystem.new_level_from_template`; no duplicar un `World` mediante `EditorAssetLibrary.duplicate_asset` para cargarlo después: esa vía produjo un error de referencias de mundo en UE 5.6 durante el desarrollo.
+Para la ampliación: compilar las clases de tráfico, ejecutar `prepare_traffic_material.py`, `build_urban_scene.py` una sola vez, `polish_urban_scene.py` y `bind_city_signals.py`. Estos assets ya están guardados: no reconstruirlos para probar. El último script enlaza las lentes de los semáforos originales con el ciclo funcional; gobierna las 150 lentes de los ocho cruces. La ampliación y sus recursos se regeneran con el procedimiento de [entorno urbano](ENTORNO_URBANO.md). El mapa se crea con `LevelEditorSubsystem.new_level_from_template`; no duplicar un `World` mediante `EditorAssetLibrary.duplicate_asset` para cargarlo después: esa vía produjo un error de referencias de mundo en UE 5.6 durante el desarrollo.
 
 `test_driving.py` requiere PIE activo, Unreal en primer plano y un único jugador local; inyecta acciones Enhanced Input durante una prueba controlada y deja un JSON en `Saved/AgentReports/driving_test.json`. La reducción de CPU del editor en segundo plano puede invalidar los tiempos de la prueba física. No ejecutarlo mientras una persona conduzca o haya un dispositivo físico de fuerza activo.
 
@@ -85,4 +89,8 @@ Para audio y consecuencias: `test_traffic_refinements.py`, `test_driving_feedbac
 
 La zona practicable depende del mapa: corredor acotado en el circuito corto, rectángulo amplio con recuperación fuera de límites en el urbano. El urbano añade colisión compleja en copias de 227 mallas de edificios; accesorios, otras calles y bordes no tienen validación exhaustiva. Los originales permanecen intactos. No presentar la ciudad entera como circuito terminado.
 
-La cabina es una primera malla de referencia creada en Blender, con volante visual. Faltan refinamiento interior, interfaz espacial, pulir timbres de sonido, calibración de G920, visor real, hápticos físicos, medición de rendimiento en RV y prueba de ejecutable empaquetado. La prueba de escritorio no cubre esos requisitos.
+El interior principal incluye asientos, consola y palanca móvil, cuadro de marcha y velocidad, volante y tres retrovisores regulables. Faltan validación del puesto sentado e interfaz espacial, pulir timbres de sonido, prueba de conducción con los mandos físicos del G920, visor real, hápticos físicos, medición de rendimiento en RV y prueba de ejecutable empaquetado. La prueba de escritorio no cubre esos requisitos.
+
+Para reproducir la carrocería de la vista interior, ejecuta `Scripts/Editor/export_cabin_shell.py` en el editor y `Scripts/Blender/build_cabin_shell.py` con Blender. El primero extrae los dos grupos de materiales de `SM_SportsCar` a `Saved/CabinSource`. El segundo recorta el cofre y la parte trasera y mantiene normales y coordenadas UV. `Scripts/Editor/import_cabin_detail.py` asigna los materiales originales al asset nuevo. En la cámara exterior el coche muestra la carrocería completa.
+
+En este equipo se comprobó también el arranque de escritorio con `Saved\StagedBuilds\Windows\RV_PIA.exe -d3d11 -nohmd`. Esta opción se aplica solo a esa ejecución. La prueba con el visor sigue pendiente.

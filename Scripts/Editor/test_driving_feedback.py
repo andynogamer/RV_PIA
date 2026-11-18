@@ -21,13 +21,14 @@ agents=list(unreal.GameplayStatics.get_all_actors_of_class(world,unreal.RVTraffi
 signals=list(unreal.GameplayStatics.get_all_actors_of_class(world,unreal.RVTrafficSignal))
 snapshot=[(a,a.distance_along_route) for a in agents]
 for a in agents:a.set_actor_tick_enabled(False);a.set_actor_enable_collision(False);a.set_actor_hidden_in_game(True)
-light=min(signals,key=lambda a:a.get_actor_location().y)
+light=next(s for s in signals if s.get_actor_label()=='Semaforo_Cruce_Sur')
 for s in signals:s.phase_override=0
 light.phase_override=3
 route=next(a.route for a in agents if a.route.get_actor_label().endswith('_Norte'))
 lead=next(a for a in agents if a.route==route)
 original_cruise=route.cruise_kmh;original_preference=lead.preferred_speed_factor
-original_limit=feedback.speed_limit_kmh;original_reward=feedback.clean_driving_reward_seconds
+scenario=unreal.GameplayStatics.get_actor_of_class(world,unreal.RVUrbanScenario)
+original_limit=scenario.posted_speed_kmh;original_reward=feedback.clean_driving_reward_seconds
 subsystem=next(s for s in unreal.ObjectIterator(unreal.EnhancedInputLocalPlayerSubsystem) if s.get_path_name().startswith('/Engine/Transient.'))
 actions={n:unreal.load_asset('/Game/VehicleTemplate/Input/Actions/IA_'+n) for n in ['Throttle','Brake','Steering','Handbrake']}
 wall=unreal.SystemLibrary.line_trace_single(world,unreal.Vector(-9500,-16000,80),unreal.Vector(-12500,-16000,80),
@@ -52,11 +53,19 @@ def pose(x,y,yaw=90,z=25,velocity=None,parked=False):
     if abs((player.get_actor_rotation().yaw-yaw+180)%360-180)>1:raise RuntimeError('Unexpected test vehicle heading.')
     if velocity:player.mesh.set_physics_linear_velocity(velocity)
 
+# A long full-throttle manoeuvre can generate more than one valid event on an open road.
+# Observe every emitted score change, including simultaneous incidents.
+phase_events = []
+def observe_event(event):
+    phase_events.append((str(event.code),event.score_delta))
+feedback.on_feedback.add_callable(observe_event)
+
 def finish(error=None):
+    feedback.on_feedback.remove_callable(observe_event)
     unreal.unregister_slate_post_tick_callback(handle)
     for a,d in snapshot:a.teleport_to_distance(d);a.set_actor_enable_collision(True);a.set_actor_tick_enabled(True);a.set_actor_hidden_in_game(False)
     route.cruise_kmh=original_cruise;lead.preferred_speed_factor=original_preference
-    feedback.speed_limit_kmh=original_limit;feedback.clean_driving_reward_seconds=original_reward
+    scenario.posted_speed_kmh=original_limit;feedback.clean_driving_reward_seconds=original_reward
     for s in signals:s.phase_override=-1
     result={'error':error,'checks':state['checks'],'records':state['records'],'peak_engine_pitch':state['peak_pitch'],
             'limits':'Explicit training rules and thresholds, not legal fault attribution or clinical assessment. No haptic hardware output.'}
@@ -71,6 +80,7 @@ def tick(delta):
     try:
         name,duration=phases[state['phase']]
         if state['enter']:
+            phase_events.clear()
             state['penalties_before']=feedback.penalty_count;state['rewards_before']=feedback.reward_count
             if name=='red_ready':pose(-9610,-26200)
             if name=='bad_stop':pose(-9850,-18300)
@@ -78,8 +88,8 @@ def tick(delta):
             if name=='wait_stop':pose(-9850,-18000,parked=True)
             if name=='good_stop':movement.set_handbrake_input(False)
             if name=='collision':pose(wall_x+1000,-16000,180)
-            if name=='overspeed':feedback.speed_limit_kmh=8;pose(-9460,-14000)
-            if name=='wrong_way':feedback.speed_limit_kmh=30;pose(-9460,-14000,-90)
+            if name=='overspeed':scenario.posted_speed_kmh=8;pose(-9460,-14000)
+            if name=='wrong_way':scenario.posted_speed_kmh=original_limit;pose(-9460,-14000,-90)
             if name=='lead_prepare':
                 pose(-9850,-18200,parked=True)
                 route.cruise_kmh=10;lead.preferred_speed_factor=1
@@ -104,11 +114,11 @@ def tick(delta):
         if state['elapsed']<duration:return
         event=feedback.latest_feedback
         state['records'].append({'phase':name,'score':feedback.safety_score,'penalties':feedback.penalty_count,'rewards':feedback.reward_count,
-            'collisions':feedback.collision_count,'event':str(event.code),'delta':event.score_delta,'haptic_request':event.haptic_request,
+            'collisions':feedback.collision_count,'event':str(event.code),'phase_events':list(phase_events),'delta':event.score_delta,'haptic_request':event.haptic_request,
             'haptic_duration_s':event.haptic_duration_seconds,'speed_kmh':assist.get_speed_kmh(),
             'position_cm':str(player.get_actor_location()),'feedback_sounds':audio.feedback_sounds_played})
         checks=state['checks']
-        if name=='red':checks['red_light_penalty']=feedback.penalty_count>state['penalties_before'] and str(event.code)=='red_light' and event.score_delta==-12
+        if name=='red':checks['red_light_penalty']=feedback.penalty_count>state['penalties_before'] and ('red_light',-12) in phase_events
         if name=='bad_stop':checks['stop_without_stopping_penalty']=feedback.penalty_count>state['penalties_before'] and str(event.code)=='stop_sign'
         if name=='good_stop':checks['proper_stop_reward']=feedback.reward_count>state['rewards_before'] and feedback.penalty_count==state['penalties_before']
         if name=='collision':
@@ -116,7 +126,7 @@ def tick(delta):
             checks['future_haptic_is_bounded_pulse']=0<event.haptic_request<=1 and 0<event.haptic_duration_seconds<=.25
         if name=='collision_quiet':checks['stationary_contact_not_repeated']=feedback.penalty_count==state['penalties_before']
         if name=='overspeed':checks['sustained_overspeed_penalty']=feedback.penalty_count>state['penalties_before'] and str(event.code)=='overspeed'
-        if name=='wrong_way':checks['sustained_wrong_way_penalty']=feedback.penalty_count>state['penalties_before'] and str(event.code)=='wrong_way'
+        if name=='wrong_way':checks['sustained_wrong_way_penalty']=feedback.penalty_count>state['penalties_before'] and ('wrong_way',-8) in phase_events
         if name=='following':checks['unsafe_headway_penalty']=feedback.penalty_count>state['penalties_before'] and str(event.code)=='following'
         if name=='clean_driving':
             checks['clean_driving_reward']=feedback.reward_count>state['rewards_before']

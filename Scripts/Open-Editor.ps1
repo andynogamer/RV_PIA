@@ -1,5 +1,6 @@
 param(
     [switch]$EnableAgentBridge,
+    [switch]$DisableWheelForTests,
     [string]$Map = '',
     [string]$EngineRoot = 'C:\Program Files\Epic Games\UE_5.6'
 )
@@ -13,6 +14,7 @@ $project = Join-Path $projectRoot 'RV_PIA.uproject'
 $launchArgs = @(('"' + $project + '"'))
 if ($Map) { $launchArgs += $Map }
 $launchArgs += '-NoSplash'
+if ($DisableWheelForTests) { $launchArgs += '-RVNoWheelInput' }
 if ($EnableAgentBridge) {
     $bridge = Join-Path $PSScriptRoot 'Editor\session_bridge.py'
     $launchArgs += ('-ExecutePythonScript="' + $bridge + '"')

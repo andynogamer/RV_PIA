@@ -11,6 +11,8 @@
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
 #include "Brushes/SlateColorBrush.h"
 #include "Styling/CoreStyle.h"
 #include "InputCoreTypes.h"
@@ -54,6 +56,38 @@ UButton* URVSessionMenuWidget::AddButton(UVerticalBox* Parent,const FString& Nam
     return Button;
 }
 
+void URVSessionMenuWidget::AddControlRow(UVerticalBox* Parent, const TCHAR* Control, const TCHAR* Action)
+{
+    auto* Row = WidgetTree->ConstructWidget<UHorizontalBox>();
+    Parent->AddChildToVerticalBox(Row)->SetPadding(FMargin(0,0,0,7));
+    auto* Size = WidgetTree->ConstructWidget<USizeBox>();
+    Size->SetWidthOverride(157);
+    Row->AddChildToHorizontalBox(Size);
+    auto* Chip = WidgetTree->ConstructWidget<UBorder>();
+    Chip->SetBrushColor(FLinearColor(.09f,.25f,.24f));
+    Chip->SetPadding(FMargin(9,3));
+    Size->AddChild(Chip);
+    auto* Key = WidgetTree->ConstructWidget<UTextBlock>();
+    Key->SetText(FText::FromString(Control));
+    Key->SetFont(FCoreStyle::GetDefaultFontStyle("Bold",19));
+    Key->SetJustification(ETextJustify::Center);
+    Chip->AddChild(Key);
+    auto* Label = WidgetTree->ConstructWidget<UTextBlock>();
+    Label->SetText(FText::FromString(Action));
+    Label->SetFont(FCoreStyle::GetDefaultFontStyle("Regular",19));
+    auto* LabelSlot = Row->AddChildToHorizontalBox(Label);
+    LabelSlot->SetPadding(FMargin(13,0,0,0));
+    LabelSlot->SetVerticalAlignment(VAlign_Center);
+}
+
+void URVSessionMenuWidget::SwitchControlGuide()
+{
+    const bool ShowWheel = WheelGuide->GetVisibility()==ESlateVisibility::Collapsed;
+    WheelGuide->SetVisibility(ShowWheel ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+    KeyboardGuide->SetVisibility(ShowWheel ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+    ControlsBackButton->SetKeyboardFocus();
+}
+
 void URVSessionMenuWidget::BuildMenu()
 {
     auto* Root=WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(),TEXT("MenuRoot"));WidgetTree->RootWidget=Root;
@@ -66,18 +100,21 @@ void URVSessionMenuWidget::BuildMenu()
     auto* ScaleSlot=Root->AddChildToOverlay(Scale);ScaleSlot->SetPadding(FMargin(20));
     ScaleSlot->SetHorizontalAlignment(HAlign_Fill);ScaleSlot->SetVerticalAlignment(VAlign_Fill);
     CardSize=WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-    CardSize->SetWidthOverride(660);CardSize->SetHeightOverride(bPauseMenu ? 590 : 530);
+    CardSize->SetWidthOverride(660);CardSize->SetHeightOverride(bPauseMenu ? 590 : 625);
     auto* ContentSlot=Cast<UScaleBoxSlot>(Scale->AddChild(CardSize));
     ContentSlot->SetHorizontalAlignment(HAlign_Center);ContentSlot->SetVerticalAlignment(VAlign_Center);
     auto* Card=WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
     Card->SetBrushColor(FLinearColor(.018f,.042f,.061f,.98f));Card->SetPadding(FMargin(36,28));CardSize->AddChild(Card);
     auto* Stack=WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());Card->AddChild(Stack);
-    AddText(Stack,TEXT("Eyebrow"),bUrbanMenu ? TEXT("CIUDAD URBANA / PRÁCTICA GUIADA") : TEXT("PRIMEROS PASOS / CIRCUITO CORTO"),12,FLinearColor(.3f,.85f,.69f),6);
+    const auto* RoadController = Cast<ARVPracticePlayerController>(GetOwningPlayer());
+    const bool Highway = RoadController && RoadController->IsHighway();
+    const bool Parking = RoadController && RoadController->IsParking();
+    AddText(Stack,TEXT("Eyebrow"),Parking ? TEXT("ESTACIONAMIENTO / DOS MANIOBRAS") : Highway ? TEXT("CARRETERA / SIERRA DEL PINO") : bUrbanMenu ? TEXT("CIUDAD URBANA / PRÁCTICA GUIADA") : TEXT("PRIMEROS PASOS / CIRCUITO CORTO"),12,FLinearColor(.3f,.85f,.69f),6);
     AddText(Stack,TEXT("Brand"),TEXT("RUTA VIRTUAL"),38,FLinearColor(.95f,.98f,1),10);
     MainPanel=WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(),TEXT("MainPanel"));Stack->AddChild(MainPanel);
     AddText(MainPanel,TEXT("Heading"),bPauseMenu ? TEXT("Tómate un respiro.") : TEXT("Tu recorrido empieza aquí."),26,FLinearColor::White,12);
     AddText(MainPanel,TEXT("Description"),bPauseMenu ? TEXT("La práctica y el tráfico están en pausa. Continúa cuando estés listo.") :
-        TEXT("Observa el entorno, familiarízate con los controles y practica a tu ritmo. Comenzarás con el vehículo detenido."),17,FLinearColor(.65f,.76f,.81f),26);
+        Parking ? TEXT("Practica dos entradas entre líneas. Primero estaciona de frente en A1 y después de reversa en B2.") : TEXT("Observa el entorno, familiarízate con los controles y practica a tu ritmo. Comenzarás con el vehículo detenido."),17,FLinearColor(.65f,.76f,.81f),26);
     if (bPauseMenu)
         if (const auto* PC=Cast<ARVPracticePlayerController>(GetOwningPlayer()))
             if (PC->GetPawn()) if (const auto* Feedback=PC->GetPawn()->FindComponentByClass<URVDrivingFeedbackComponent>())
@@ -90,11 +127,32 @@ void URVSessionMenuWidget::BuildMenu()
         AddButton(MainPanel,TEXT("HomeButton"),TEXT("Volver al inicio"))->OnClicked.AddDynamic(this,&URVSessionMenuWidget::HandleHome);
     }
     AddButton(MainPanel,TEXT("ControlsButton"),TEXT("Ver controles"))->OnClicked.AddDynamic(this,&URVSessionMenuWidget::ToggleControls);
+    if (!bPauseMenu)
+        AddButton(MainPanel,TEXT("RoadButton"),Highway ? TEXT("Cambiar a ciudad") : TEXT("Cambiar a carretera"))->OnClicked.AddDynamic(this,&URVSessionMenuWidget::HandleSwitchRoad);
+    if (!bPauseMenu) AddButton(MainPanel,TEXT("ParkingButton"),Parking ? TEXT("Cambiar a ciudad") : TEXT("Practicar estacionamiento"))->OnClicked.AddDynamic(this,&URVSessionMenuWidget::HandleSwitchParking);
     if (!bPauseMenu) AddButton(MainPanel,TEXT("QuitButton"),TEXT("Salir del simulador"))->OnClicked.AddDynamic(this,&URVSessionMenuWidget::HandleQuit);
     ControlsPanel=WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(),TEXT("ControlsPanel"));Stack->AddChild(ControlsPanel);
-    AddText(ControlsPanel,TEXT("ControlsHeading"),TEXT("Conoce los controles"),26,FLinearColor::White,18);
-    AddText(ControlsPanel,TEXT("ControlsText"),TEXT("W / ↑  Acelerar     ·     S / ↓  Frenar\nA / D  Girar a izquierda / derecha\nR  Cambiar avance / reversa, estando detenido\nEspacio  Freno de mano (pulsa y suelta para salir)\nP / M  Abrir la pausa     ·     Inicio  Reiniciar\nTab  Cambiar cámara     ·     L  Luces\nH  Claxon     ·     V  Silenciar / restaurar sonido"),17,FLinearColor(.8f,.87f,.9f),20);
-    AddText(ControlsPanel,TEXT("ControlsTip"),TEXT("Suelta el acelerador al reanudar. Observa antes de incorporarte, respeta las señales y deja distancia."),16,FLinearColor(.3f,.85f,.69f),20);
+    WheelGuide=WidgetTree->ConstructWidget<UVerticalBox>(); ControlsPanel->AddChild(WheelGuide);
+    AddText(WheelGuide,TEXT("WheelHeading"),TEXT("Volante y palanca"),27,FLinearColor::White,12);
+    AddControlRow(WheelGuide,TEXT("Espacio"),TEXT("Pulsa y suelta el freno de mano"));
+    AddControlRow(WheelGuide,TEXT("Embrague"),TEXT("Pisa a fondo para cambiar"));
+    AddControlRow(WheelGuide,TEXT("1–5 · N · R"),TEXT("Mueve la palanca por la H"));
+    AddControlRow(WheelGuide,TEXT("Reversa"),TEXT("Detente, pisa el embrague y mueve a 6"));
+    AddControlRow(WheelGuide,TEXT("J / Enter"),TEXT("Calibra y registra cada posición"));
+    AddControlRow(WheelGuide,TEXT("K"),TEXT("Alterna volante y teclado al parar"));
+    AddControlRow(WheelGuide,TEXT("B / flechas"),TEXT("Elige y ajusta cada espejo al parar"));
+    AddButton(WheelGuide,TEXT("ShowKeys"),TEXT("Ver teclas de conducción"))->OnClicked.AddDynamic(this,&URVSessionMenuWidget::SwitchControlGuide);
+    KeyboardGuide=WidgetTree->ConstructWidget<UVerticalBox>(); ControlsPanel->AddChild(KeyboardGuide);
+    AddText(KeyboardGuide,TEXT("KeysHeading"),TEXT("Teclado"),27,FLinearColor::White,12);
+    AddControlRow(KeyboardGuide,TEXT("W / S"),TEXT("Acelerar / frenar"));
+    AddControlRow(KeyboardGuide,TEXT("A / D"),TEXT("Girar a izquierda / derecha"));
+    AddControlRow(KeyboardGuide,TEXT("Espacio / R"),TEXT("Freno de mano / avance o reversa"));
+    AddControlRow(KeyboardGuide,TEXT("P · M / Inicio"),TEXT("Pausa / reiniciar"));
+    AddControlRow(KeyboardGuide,TEXT("Tab / L"),TEXT("Cambiar cámara / luces"));
+    AddControlRow(KeyboardGuide,TEXT("H / V"),TEXT("Claxon / silenciar sonido"));
+    AddControlRow(KeyboardGuide,TEXT("G / B"),TEXT("Mostrar guía / ajustar espejos"));
+    AddButton(KeyboardGuide,TEXT("ShowWheel"),TEXT("Ver volante y palanca"))->OnClicked.AddDynamic(this,&URVSessionMenuWidget::SwitchControlGuide);
+    KeyboardGuide->SetVisibility(ESlateVisibility::Collapsed);
     ControlsBackButton=AddButton(ControlsPanel,TEXT("ControlsBackButton"),TEXT("Volver"),true);
     ControlsBackButton->OnClicked.AddDynamic(this,&URVSessionMenuWidget::ToggleControls);
     ControlsPanel->SetVisibility(ESlateVisibility::Collapsed);
@@ -108,7 +166,9 @@ void URVSessionMenuWidget::FocusPrimaryButton()
 void URVSessionMenuWidget::ToggleControls()
 {
     bControlsVisible=!bControlsVisible;
-    CardSize->SetHeightOverride(bControlsVisible ? 650 : bPauseMenu ? 590 : 530);
+    CardSize->SetHeightOverride(bControlsVisible ? 585 : bPauseMenu ? 590 : 625);
+    for (const FName Name : {FName(TEXT("Brand")),FName(TEXT("Eyebrow")),FName(TEXT("Footer"))})
+        WidgetTree->FindWidget(Name)->SetVisibility(bControlsVisible ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
     MainPanel->SetVisibility(bControlsVisible ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
     ControlsPanel->SetVisibility(bControlsVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
     if (bControlsVisible) ControlsBackButton->SetKeyboardFocus();else FocusPrimaryButton();
@@ -116,6 +176,8 @@ void URVSessionMenuWidget::ToggleControls()
 void URVSessionMenuWidget::HandlePrimary() { if (auto* PC=Cast<ARVPracticePlayerController>(GetOwningPlayer())) PC->StartSession(); }
 void URVSessionMenuWidget::HandleRestart() { if (auto* PC=Cast<ARVPracticePlayerController>(GetOwningPlayer())) PC->RestartSession(); }
 void URVSessionMenuWidget::HandleHome() { if (auto* PC=Cast<ARVPracticePlayerController>(GetOwningPlayer())) PC->ShowStartMenu(); }
+void URVSessionMenuWidget::HandleSwitchParking() { if (auto* PC=Cast<ARVPracticePlayerController>(GetOwningPlayer())) PC->SwitchParking(); }
+void URVSessionMenuWidget::HandleSwitchRoad() { if (auto* PC=Cast<ARVPracticePlayerController>(GetOwningPlayer())) PC->SwitchRoad(); }
 void URVSessionMenuWidget::HandleQuit() { if (auto* PC=Cast<ARVPracticePlayerController>(GetOwningPlayer())) PC->QuitSession(); }
 
 FReply URVSessionMenuWidget::NativeOnPreviewKeyDown(const FGeometry& Geometry,const FKeyEvent& Event)

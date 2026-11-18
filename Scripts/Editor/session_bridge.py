@@ -29,7 +29,10 @@ def _rv_tick(delta):
     _rv_check_time = time.monotonic()
     if not _rv_request.exists():
         return
-    request = json.loads(_rv_request.read_text(encoding='utf-8-sig'))
+    try:
+        request = json.loads(_rv_request.read_text(encoding='utf-8-sig'))
+    except (PermissionError, FileNotFoundError):
+        return
     task_id = request.get('id')
     if not task_id or task_id == _rv_last:
         return

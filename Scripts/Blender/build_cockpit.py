@@ -1,4 +1,5 @@
 """Generate original cockpit reference geometry using Blender 3.6 (meters)."""
+import sys
 from pathlib import Path
 import bpy
 from math import pi, sin, cos
@@ -91,8 +92,8 @@ for y in [-0.65, -0.02, 0.64]:
 for y in [-0.79, 0.79]:
     box('Door interior', (-0.32, y, 0.58), (1.08, 0.075, 0.46), plastic, 0.025)
     box('Door grip', (-0.25, y * 0.95, 0.65), (0.25, 0.055, 0.055), trim, 0.012)
-    bar('Windscreen pillar', (-0.12, y, 0.85), (0.53, y * 0.86, 1.40), 0.035, plastic)
-bar('Windscreen upper rail', (0.53, -0.68, 1.4), (0.53, 0.68, 1.4), 0.035, plastic)
+    bar('Windscreen pillar', (0.55, y, 0.84), (-0.03, y * 0.89, 1.36), 0.030, plastic)
+bar('Windscreen upper rail', (-0.03, -0.703, 1.36), (-0.03, 0.703, 1.36), 0.025, plastic)
 box('Floor', (-0.15, 0, 0.24), (1.4, 1.5, 0.04), rubber)
 box('Console', (-0.12, 0.11, 0.40), (0.65, 0.23, 0.30), plastic, 0.03)
 
@@ -121,9 +122,28 @@ rim = bpy.context.object
 rim.data.materials.append(rubber)
 for face in rim.data.polygons:
     face.use_smooth = True
-box('Hub', center, (0.06, 0.105, 0.085), rubber, 0.02)
-for angle in [0, pi, 1.5 * pi]:
-    bar('Wheel spoke', center, center + Vector((0, 0.157 * cos(angle), 0.157 * sin(angle))), 0.012, trim)
+# The hub, thumb pads and broad spokes rotate with the rim around the column.
+def wheel_pad(name, offset, size, mat, radius):
+    return box(name, center + Vector(offset), size, mat, radius)
+
+for sign in (-1, 1):
+    spoke = wheel_pad('Cast spoke', (0.006, sign*.101, -.011), (.027,.143,.044), trim, .011)
+    spoke.rotation_euler.x = sign*.12
+    wheel_pad('Thumb rest', (-.007,sign*.110,.004),(.036,.079,.047),rubber,.014)
+    for lateral in (-.011, .011):
+        wheel_pad('Switch',(-.028,sign*.112+lateral,.006),(.009,.017,.022),plastic,.003)
+    bar('Paddle',center+Vector((.037,sign*.114,.005)),center+Vector((.037,sign*.125,.074)),.009,trim)
+lower = wheel_pad('Lower spoke',(0.007,0,-.103),(.028,.050,.134),trim,.013)
+wheel_pad('Lower grip',(-.008,0,-.103),(.016,.029,.087),rubber,.007)
+wheel_pad('Airbag surround',(-.005,0,-.006),(.060,.166,.101),plastic,.027)
+wheel_pad('Horn pad',(-.035,0,-.004),(.027,.147,.084),rubber,.012)
+# Embossed horn outline with two sound waves on the front surface.
+face=center.x-.050
+horn=[(-.016,.000),(-.007,.000),(.001,.007),(.001,-.008),(-.007,-.003),(-.016,-.003),(-.016,.000)]
+for (u,v),(u2,v2) in zip(horn,horn[1:]):
+    bar('Horn emblem',(face,center.y+u,center.z+v),(face,center.y+u2,center.z+v2),.0009,trim)
+for offset in (.005,.009):
+    bar('Horn waves',(face,center.y+offset,center.z-.004),(face,center.y+offset+.001,center.z+.003),.0007,trim)
 # Join only wheel geometry; keep dashboard excluded.
 bpy.ops.object.select_all(action='DESELECT')
 wheel_objects = [o for o in bpy.context.scene.objects if o.type == 'MESH' and o != cab]
@@ -138,7 +158,7 @@ bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 cab.hide_set(False)
 cab.hide_render = False
 
-for obj in [cab, wheel]:
+for obj in ([cab] if "--cab-only" in sys.argv else [wheel] if "--wheel-only" in sys.argv else [cab, wheel]):
     bpy.ops.object.select_all(action='DESELECT')
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj

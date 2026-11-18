@@ -1,23 +1,22 @@
 # Integración del hardware
 
-Este documento define el procedimiento previsto. No contiene calibraciones reales ni prueba de conexión realizada.
+El 17 de noviembre el usuario confirmó el G920 con pedales conectado y la incorporación de un Driving Force Shifter. Windows detectó el volante como `G920 Driving Force Racing Wheel for Xbox One` (`046D:C261`), con controlador Microsoft 10.0.26100.9818 en el dispositivo USB. Inicialmente DirectInput y GameInput carecían de lecturas. Se instaló Logitech G HUB con WinGet. La base pasó a `046D:C262`. DirectInput pudo adquirirla y GameInput devolvió dirección, acelerador, freno, embrague y posición de palanca por nombre. La salida inicial era cero. En la prueba posterior con posiciones conocidas, Windows.Gaming.Input registró N y 1–6, incluida quinta con el botón físico 17 (numeración desde uno). Para repetir el diagnóstico, comprueba el nombre del dispositivo y los valores en G HUB y en el simulador.
 
-## Logitech G920
+## Logitech G920 y Driving Force Shifter
 
-El usuario cuenta con autorización del profesor para comprarlo y está pendiente de recibirlo. Se usará en PC con volante y pedales. Primero integrar dirección, acelerador y freno; embrague y cambio manual completo quedan fuera del mínimo.
+1. Sujeta volante, palanca y pedales. Conecta los pedales y la palanca a la base del G920 según el fabricante. Comprueba alimentación, USB y reconocimiento en G HUB. Mantén libre el volante durante su calibración automática. [Guía de conexión de Logitech](https://support.logi.com/hc/en-001/articles/4404187621911-Troubleshoot-G923-G29-G920-for-connection-Issues)
+2. En Windows, pulsa **Win + R**, escribe `joy.cpl` y abre **Propiedades** del G920. Comprueba que el volante y los tres pedales cambian de valor por separado. Recorre las siete posiciones de la palanca y vuelve a neutral. Si falta el G920 o no cambian lecturas, comprueba primero el controlador y el montaje con la guía anterior.
+3. En Unreal 5.6.1 abre `L_CiudadUrbana`, pulsa **Play** y elige **Comenzar práctica**. El HUD debe pasar a **G920** y mostrar las barras de embrague, freno y acelerador. La lectura automática de Windows.Gaming.Input usa ejes con nombre y posiciones de palanca. Para crear un perfil DirectInput alternativo, con el auto estacionado pulsa **J**. Sigue el texto del HUD: neutral con todo suelto y volante centrado, extremos izquierdo y derecho, acelerador, freno, embrague, marchas 1 a 6, R y vuelta a neutral. Mantén el control en la posición indicada al pulsar **Enter** en cada paso. Durante la calibración solo, para registrar el enclavamiento R de fábrica oprime la palanca hacia abajo y llévala a la posición de sexta. Para cancelar, pulsa **J** otra vez. [Driving Force Shifter](https://www.logitechg.com/en-us/shop/p/driving-force-shifter)
+4. Si completas la calibración manual, el perfil tiene prioridad sobre el modo automático y se guarda localmente en `GameUserSettings.ini`. Pulsa y suelta **Espacio** para liberar el freno de mano. Pisa el embrague a fondo, selecciona **1**, suelta el embrague de forma gradual y acelera suavemente. El HUD superior indica la marcha seleccionada (**N**, **1–5** o **R**). El indicador de la cabina muestra la marcha acoplada y pasa a **N** al pisar el embrague a fondo. Para retroceder, detente, pisa el embrague y lleva la palanca a la posición marcada **6** sin hundirla. El enclavamiento R de fábrica también selecciona reversa. Si la marcha llegó antes que el embrague, mantén la posición y pisa a fondo. Si intentaste invertir el sentido en movimiento, detente y pasa por N antes de reintentarlo.
+5. Prueba pausa, reinicio, pérdida de foco y desconexión a baja velocidad en un espacio libre. Debe haber acelerador cero y marcha neutral al perder entrada. Para rearmar, suelta el acelerador. Puedes usar N o, estando detenido en una marcha, pisar el embrague a fondo. **K** alterna entre teclado y G920 con el vehículo detenido. Repite **J** si cambias el rango de giro o el controlador.
 
-Al recibirlo:
+El modo automático usa RacingWheel de Windows.Gaming.Input con el SDK de Windows elegido por Unreal. Comprueba la identidad de la base y espera una lectura con marca temporal. En la cabina, **Palanca** indica la posición física y el indicador de marcha conserva la selección aceptada por el simulador. El modo de calibración manual utiliza DirectInput en primer plano y aprende los índices, signo y recorrido de las muestras. El perfil requiere cuatro ejes independientes y siete botones de marcha distintos. El cambio de marcha por palanca usa solo lecturas, sin enviar fuerza. [Lectura inmediata de joystick con DirectInput](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee418260%28v%3Dvs.85%29)
 
-1. Sujetar volante y pedales, revisar conexiones y alimentación según el fabricante. Mantener libre el volante durante su calibración automática.
-2. Confirmar detección en Windows y software oficial. Anotar driver/software, VID/PID observados y rango de giro configurado.
-3. Verificar ejes y botones sin Unreal: reposo, centro y extremos. Registrar acelerador/freno independientes, inversión y ruido.
-4. Activar y probar RawInput en una escena de diagnóstico. Identificar los índices reales y traducirlos a acciones lógicas; no confundir índice de dispositivo, posición de array y Generic USB Controller Axis.
-5. Calibrar dirección y pedales en sus rangos normalizados; verificar valor cero en pedales sueltos y ausencia de aceleración al iniciar.
-6. Integrar el vehículo, comprobar frenado y reversa primero a velocidad baja.
-7. Integrar y probar fuerza como tarea separada. Un volante que se centra por configuración del driver no demuestra fuerza producida por la simulación.
-8. Desconectar y reconectar durante una prueba controlada: acelerador cero, aviso y salida de fuerza cero; requerir confirmación/calibración para reanudar si el estado es incierto.
+### Probar solo la palanca
 
-La documentación de [RawInput 5.6](https://dev.epicgames.com/documentation/en-us/unreal-engine/rawinput-plugin-in-unreal-engine?application_version=5.6) incluye un ejemplo con G920. Úsalo como referencia; conserva el registro de lo medido en este dispositivo. Para fuerza, consultar el [SDK oficial Logitech](https://www.logitechg.com/en-us/programs/partner-developer-lab), revisar requisitos y compatibilidad antes de integrar. No se ha descargado ni instalado aquí.
+Pausa la práctica y abre `Scripts/Probar-Palanca.cmd` con doble clic. Deja la ventana de prueba en primer plano y recorre N, 1–6 y R. Puedes dejar los pedales sueltos. El número grande es la posición que comunica la base. La lectura física **6** corresponde a **R** en el juego. Debajo aparecen los botones activos y las posiciones ya observadas. Un guion indica que todavía falta una lectura válida. En esta máquina se observó que una aplicación recién abierta puede empezar con valor cero y marca temporal cero aunque la palanca esté en una marcha.
+
+Las transiciones se guardan en `Saved/AgentReports/prueba_palanca.json`. En Unreal, compara **Palanca** con la marcha del coche. Para engranar, inicia en N con el acelerador suelto, pisa el embrague a fondo y selecciona la marcha. [Lecturas de RacingWheel en Windows](https://learn.microsoft.com/en-us/windows/uwp/gaming/racing-wheel-and-force-feedback)
 
 ## Visor prestado
 
@@ -46,7 +45,7 @@ La simulación ahora expone `OnFeedback` con motivo y solicitud de pulso lógico
 
 Definir antes de escribir firmware final:
 
-- Entradas: botón de reversa con antirrebote y cambio por flanco, no por cada frame mientras esté pulsado. Posibilidad de pausa física si el montaje lo permite.
+- Entradas opcionales: pausa física si el montaje lo permite. La reversa se selecciona con el Driving Force Shifter.
 - Salida: vibración por un evento congruente de la simulación; intensidad limitada, apagada por defecto y configurable.
 - Comunicación: protocolo versionado con tipo de mensaje, secuencia, longitud/límite de mensaje, unidades y rangos. Parser no bloqueante, descarte de mensajes inválidos y prevención de acumulación de comandos antiguos.
 - Seguridad funcional: salida cero al iniciar, pausar, salir, perder conexión o vencer timeout. Watchdog también en firmware para que una caída del juego no deje la vibración activa.

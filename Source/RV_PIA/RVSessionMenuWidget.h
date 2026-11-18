@@ -24,11 +24,17 @@ protected:
 private:
     void BuildMenu();
     UButton* AddButton(UVerticalBox* Parent,const FString& Name,const FString& Label,bool bPrimary=false);
+    void AddControlRow(UVerticalBox* Parent, const TCHAR* Control, const TCHAR* Action);
+    UFUNCTION() void SwitchControlGuide();
+    UPROPERTY(Transient) TObjectPtr<UVerticalBox> WheelGuide;
+    UPROPERTY(Transient) TObjectPtr<UVerticalBox> KeyboardGuide;
     UTextBlock* AddText(UVerticalBox* Parent,const FString& Name,const FString& Text,int32 Size,FLinearColor Color,float Bottom=12);
     UFUNCTION() void HandlePrimary();
     UFUNCTION() void HandleRestart();
     UFUNCTION() void HandleHome();
     UFUNCTION() void HandleQuit();
+    UFUNCTION() void HandleSwitchRoad();
+    UFUNCTION() void HandleSwitchParking();
     UPROPERTY(Transient) TObjectPtr<UButton> PrimaryButton;
     UPROPERTY(Transient) TObjectPtr<UButton> ControlsBackButton;
     UPROPERTY(Transient) TObjectPtr<UVerticalBox> MainPanel;

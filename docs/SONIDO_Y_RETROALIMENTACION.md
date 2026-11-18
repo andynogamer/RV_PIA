@@ -11,7 +11,7 @@ La sesión empieza con **100 puntos de seguridad**, limitados a 0–100. Los err
 - Rojo: −12, al cruzar con el frente del vehículo la línea de un cruce controlado. Usa desplazamiento continuo y dirección de movimiento; descarta saltos de posición para evitar evaluar un teletransporte.
 - ALTO de salida: −10, si se cruza el marcador sin permanecer al menos 1 s detenido en su zona previa. Solo se evalúa el marcador nuevo de salida, no todos los letreros decorativos del escenario.
 - Contacto: −20, con umbral de impacto horizontal de 2.5 km/h, velocidad previa e impulso físico. También se comprueba una pérdida brusca de velocidad contra geometría bloqueante para cubrir la recreación del estado de Chaos. Se ignoran apoyo normal en suelo, frenado normal y contactos muy pequeños; no se atribuye culpa legal a un conductor.
-- Exceso de velocidad: −5, por más de 2.5 s superando el límite más 2 km/h de tolerancia. El límite del evaluador es configurable, por defecto 30 km/h.
+- Exceso de velocidad: −5, por más de 2.5 s superando el límite más 2 km/h de tolerancia. El evaluador consulta `PostedSpeedKmh` del escenario. La ciudad indica 50 km/h y la carretera 80 km/h. El circuito corto usa el límite de entrenamiento de 30 km/h.
 - Seguimiento cercano: −4, tras más de 1.5 s de proximidad directa a otro automóvil, avanzando a más de 8 km/h.
 - Sentido contrario: −8, tras más de 2.5 s avanzando a más de 8 km/h contra una ruta próxima. Se excluyen zonas de cruce y la reversa lenta; solo se evalúan carriles definidos.
 

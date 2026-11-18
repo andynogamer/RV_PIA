@@ -6,13 +6,21 @@ Entrega indicada por el usuario: jueves 19 de noviembre de 2026, zona America/Me
 
 ## Estado actual
 
-Existe un prototipo urbano de escritorio en `/Game/RutaVirtual/Maps/L_CiudadUrbana`: salida estacionada, ciudad ampliada, cuatro carriles con 12 autos autónomos de prototipo, dos cruces semaforizados y recorrido guiado de unos 250 metros. Conserva el vehículo Chaos, cabina creada en Blender, límites de velocidad, pausa y reinicio. El circuito de 40 metros (`L_CiudadPractica`) y la sala original de RV se conservan.
+Existe un prototipo urbano de escritorio en `/Game/RutaVirtual/Maps/L_CiudadUrbana`: salida estacionada, ciudad ampliada, cuatro carriles con 12 autos autónomos de prototipo, ocho cruces semaforizados y recorrido guiado de unos 238 metros. Conserva el vehículo Chaos, cabina creada en Blender, límites de velocidad, pausa y reinicio. El circuito de 40 metros (`L_CiudadPractica`) y la sala original de RV se conservan.
 
-Para probar: pulsa Play y elige «Comenzar práctica» en el menú inicial; el juego captura ratón y teclado automáticamente. Comienzas con freno de mano: pulsa y suelta Espacio para salir. W acelera, S frena, A/D giran, R cambia marcha casi detenido, P/M abre la pausa e Inicio/Home reinicia. El menú permite ver controles, continuar, reiniciar y volver al inicio. Consulta la [guía de desarrollo y controles](docs/DESARROLLO.md) y el [alcance urbano](docs/ENTORNO_URBANO.md).
+Desde el menú inicial puedes conducir en la ciudad o elegir **Cambiar a carretera** para abrir Sierra del Pino. Para volver desde la carretera, abre la pausa, elige **Volver al inicio** y después **Cambiar a ciudad**.
+
+Elige **Practicar estacionamiento** en el menú inicial para abrir el patio. Entra de frente en **A1** y luego de reversa en **B2**. En cada cajón, centra el coche, enderézalo y mantén **Espacio** al detenerte hasta que cambie la indicación. **Home** repite la práctica.
+
+Para probar, pulsa Play y elige «Comenzar práctica». Comienzas con freno de mano. Pulsa y suelta Espacio para liberarlo. Con G HUB activo, el G920 y su palanca se leen mediante Windows.Gaming.Input. Suelta el acelerador para comenzar. Si la palanca ya está en una marcha, puedes mantenerla y pisar el embrague a fondo con el coche detenido. J abre la calibración manual opcional. Pisa el embrague para elegir una de las cinco marchas de avance o la reversa en la posición 6. Para desarrollo con teclado, W acelera, S frena, A/D giran y R alterna avance/reversa casi detenido. P/M abre la pausa e Inicio/Home reinicia. Consulta la [calibración del G920](docs/HARDWARE.md) y la [guía de controles](docs/DESARROLLO.md).
+
+El coche del jugador tiene retrovisor interior y dos laterales con imagen de la escena. Detenido y en cámara de cabina, **B** selecciona cada espejo, las **flechas** ajustan el ángulo y **Enter** guarda y termina. Con el perfil automático del G920 también puedes seleccionar con las dos levas juntas y ajustar con la cruceta. **G** oculta o recupera la guía, que se recoge al comenzar a circular. Si mueves la palanca antes de pisar el embrague, mantén la marcha y pisa el pedal para engranarla.
 
 Hay sonido de motor/rodadura/ambiente, claxon y retroalimentación educativa con puntos, avisos y reconocimientos. H activa claxon y V silencia/restaura sonido. Los timbres son síntesis original de prototipo. La IA conserva rutas por splines, con seguimiento, reacción al verde y luces de freno; los giros entre rutas y maniobras complejas siguen pendientes. Ver [sonido y retroalimentación](docs/SONIDO_Y_RETROALIMENTACION.md).
 
-El G920 está pendiente de llegar y el visor previsto es Meta Quest 3, todavía sujeto a confirmación del préstamo y prueba. Se propone Windows PCVR mediante Link/OpenXR. No se han validado periféricos, salida háptica física ni ejecutable empaquetado. El detalle está en [estado del proyecto](docs/ESTADO.md).
+G HUB habilitó las lecturas del G920, los tres pedales y la palanca en Windows. El HUD muestra qué tecla pulsar, qué pedal pisar y por qué carril de la H mover la palanca. El visor previsto es Meta Quest 3, sujeto a confirmación del préstamo y prueba mediante Link/OpenXR en Windows PCVR. El estado de las pruebas y de la salida háptica se mantiene en [estado del proyecto](docs/ESTADO.md).
+
+**Prueba rápida de la palanca.** Abre [Probar-Palanca.cmd](Scripts/Probar-Palanca.cmd) con doble clic. La ventana muestra cada marcha física y las posiciones vistas. Dentro de la cabina, el indicador **Palanca** muestra la posición física incluso cuando la caja sigue en N.
 
 ## Punto de entrada
 

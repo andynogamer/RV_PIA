@@ -15,10 +15,21 @@ if (!$editors.Count -or !@($editors | Where-Object { $_.StartTime.ToUniversalTim
 if ($ready.editor_pid -and !@($editors | Where-Object Id -eq $ready.editor_pid).Count) { throw 'The bridge belongs to a previous editor process.' }
 $taskId = [guid]::NewGuid().ToString('N')
 $request = @{ id = $taskId; script = $Script; args = ($ArgumentsJson | ConvertFrom-Json); stop = [bool]$Stop }
-$temporary = Join-Path $queue 'request.tmp'
+$temporary = Join-Path $queue "$taskId.request.tmp"
 $target = Join-Path $queue 'request.json'
 $request | ConvertTo-Json -Depth 16 | Set-Content -LiteralPath $temporary -Encoding utf8
-Move-Item -LiteralPath $temporary -Destination $target -Force
+# On Windows the reader can briefly hold the destination while the request is published.
+for ($attempt = 0; ; $attempt++) {
+    try {
+        if ([IO.File]::Exists($target)) { [IO.File]::Replace($temporary, $target, [NullString]::Value) }
+        else { [IO.File]::Move($temporary, $target) }
+        break
+    }
+    catch [IO.IOException] {
+        if ($attempt -ge 15) { throw }
+        Start-Sleep -Milliseconds 50
+    }
+}
 $resultPath = Join-Path $queue "$taskId.json"
 $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
 while (!(Test-Path -LiteralPath $resultPath)) {
