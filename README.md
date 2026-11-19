@@ -2,11 +2,48 @@
 
 Simulador académico inmersivo de familiarización con la conducción, desarrollado en Unreal Engine 5.6. Proyecto técnico: `RV_PIA`. El objetivo es practicar controles y maniobras sencillas en un entorno controlado. No es un tratamiento clínico ni sustituye a un instructor.
 
-Entrega indicada por el usuario: jueves 19 de noviembre de 2026, zona America/Mexico_City. Falta confirmar si corresponde al segundo avance o a la entrega final; se planifica conservadoramente para la final.
+## Clonar el proyecto desde GitHub
+
+La versión que probamos en la ciudad con las Meta Quest 3 y el Logitech G920 está en la rama **`main`**. Estos pasos descargan el proyecto en tu PC con Windows y te permiten jugar desde Unreal.
+
+### 1. Prepara tu PC
+
+- Instala Git para Windows. Abre PowerShell y ejecuta `git lfs version`. Si el comando no se reconoce, instala Git LFS y vuelve a abrir PowerShell. El proyecto usa LFS para guardar los mapas, modelos y sonidos. [Git para Windows](https://git-scm.com/downloads/win) · [Git LFS](https://git-lfs.com/)
+- En la biblioteca de Epic Games Launcher instala **Unreal Engine 5.6.1**, la versión que usó el equipo.
+- Instala **Visual Studio 2022**. En Visual Studio Installer selecciona **Desarrollo de juegos con C++** e incluye las herramientas **MSVC v143** y el **SDK de Windows**. El proyecto compila un módulo de C++. [Configuración de Visual Studio para Unreal Engine 5.6](https://dev.epicgames.com/documentation/en-us/unreal-engine/setting-up-visual-studio-development-environment-for-cplusplus-projects-in-unreal-engine?application_version=5.6)
+
+### 2. Descarga la rama main
+
+Abre en el Explorador la carpeta donde quieres guardar el proyecto. Escribe `powershell` en la barra de direcciones y pulsa **Enter**. Ejecuta estos comandos en orden y espera a que termine cada uno.
+
+```powershell
+git lfs install
+git clone --branch main https://github.com/andynogamer/RV_PIA.git
+cd RV_PIA
+git lfs pull
+```
+
+Al terminar tendrás una carpeta `RV_PIA` con el archivo `RV_PIA.uproject`. Para comprobar que llegó el mapa de la ciudad, ejecuta `git lfs ls-files --include="Content/RutaVirtual/Maps/L_CiudadUrbana.umap"`. Un asterisco `*` junto a la ruta indica que el mapa está descargado. Si aparece un guion `-`, vuelve a ejecutar `git lfs pull`.
+
+### 3. Abre la ciudad por primera vez
+
+1. Cierra Unreal Editor si está abierto. En la misma ventana de PowerShell, desde la carpeta `RV_PIA`, ejecuta `.\Scripts\Build-Project.ps1`. Si instalaste Unreal en otra unidad, indica su carpeta. Por ejemplo, `.\Scripts\Build-Project.ps1 -EngineRoot 'D:\Epic Games\UE_5.6'`.
+2. Cuando termine la compilación, haz doble clic en `RV_PIA.uproject` y espera a que el editor termine de preparar los shaders. Se abrirá el mapa **L_CiudadUrbana**.
+3. Para probar en el monitor, pulsa **Play ▶** y elige **Comenzar práctica**. Con las Quest 3, entra primero en **Quest Link** desde el visor y selecciona **VR Preview** en el menú de Play. Con el G920, **A verde** confirma y **X azul** libera el freno de mano. [Guía del visor y el volante](docs/HARDWARE.md)
+
+**Si ya tienes una copia**, abre PowerShell en la carpeta `RV_PIA` y actualízala con estos comandos.
+
+```powershell
+git switch main
+git pull --ff-only
+git lfs pull
+```
 
 ## Estado actual
 
-Existe un prototipo urbano de escritorio en `/Game/RutaVirtual/Maps/L_CiudadUrbana`: salida estacionada, ciudad ampliada, cuatro carriles con 12 autos autónomos de prototipo, ocho cruces semaforizados y recorrido guiado de unos 238 metros. Conserva el vehículo Chaos, cabina creada en Blender, límites de velocidad, pausa y reinicio. El circuito de 40 metros (`L_CiudadPractica`) y la sala original de RV se conservan.
+Entrega indicada por el usuario: jueves 19 de noviembre de 2026, zona America/Mexico_City. Falta confirmar si corresponde al segundo avance o a la entrega final; se planifica conservadoramente para la final.
+
+La práctica comienza en `/Game/RutaVirtual/Maps/L_CiudadUrbana`, en el monitor o en las Quest 3 mediante Link. El coche sale estacionado en una ciudad con cuatro carriles, 12 autos de tráfico, ocho cruces semaforizados y un recorrido guiado de unos 238 metros. Conserva el vehículo Chaos, cabina creada en Blender, límites de velocidad, pausa y reinicio. El circuito de 40 metros (`L_CiudadPractica`) y la sala original de RV se conservan.
 
 Desde el menú inicial puedes conducir en la ciudad o elegir **Cambiar a carretera** para abrir Sierra del Pino. Para volver desde la carretera, abre la pausa, elige **Volver al inicio** y después **Cambiar a ciudad**.
 
@@ -36,16 +73,8 @@ La ciudad es el mapa de inicio en Windows PCVR. Para sentir el retorno del volan
 - Comprobaciones: [validación](docs/VALIDACION.md) y [procedimiento Blueprint](docs/BLUEPRINTS.md).
 - Historial: [decisiones](docs/DECISIONES.md), [procedencia de assets](docs/ASSETS.md) y [repositorio](docs/REPOSITORIO.md).
 
-## Abrir el proyecto
-
-1. Instala Unreal Engine 5.6; la sesión observada usa 5.6.1. No aceptes una conversión a 5.8 por defecto.
-2. Si obtienes el proyecto mediante Git, instala Git LFS y ejecuta `git lfs pull` después de clonar. El proyecto ahora incluye C++: necesita compilador y Windows SDK compatibles; ver la guía de desarrollo.
-3. Con el editor cerrado, `Scripts/Build-Project.ps1` compila el módulo Editor. Abre `RV_PIA.uproject`; la carga inicial puede generar shaders y cachés.
-4. Revisa el mapa activo y los errores del registro. La ciudad urbana debe ser la escena de inicio; el circuito corto y la sala original siguen disponibles por separado.
-5. Antes de trabajar con el visor identifica marca, modelo, modo de conexión y runtime; no selecciones un perfil de Quest por suposición.
-
 ## Herramientas incluidas
 
 `Scripts/Get-ProjectInventory.ps1` produce un inventario de archivos y configuración sin abrir Unreal. `Scripts/Audit-Unreal.ps1` prepara una auditoría de assets y actores dentro del motor; exige cerrar el editor después de guardar. Su ejecución interna aún debe verificarse en este equipo. Ambas escriben evidencia derivada bajo `Saved/AgentReports/`, fuera de Git.
 
-El repositorio utiliza Git LFS. Ya existe un remoto `origin` configurado por el usuario; el trabajo de sonido y retroalimentación se prepara en la rama local `feature/audio-retroalimentacion` y no se sube automáticamente. No se ha otorgado una licencia general de redistribución de los recursos.
+La rama de referencia del equipo es `main`. Consulta el registro del proyecto para conocer la procedencia y las condiciones de uso de los recursos. [Procedencia de los recursos](docs/ASSETS.md)

@@ -4,6 +4,8 @@ Fecha de la última comprobación: 19 de noviembre de 2026, America/Mexico_City.
 
 ## Estabilidad de la ciudad y retorno del volante
 
+Tras probar esta versión con las Quest 3 y el G920, el conductor confirmó que la práctica funcionó bien en su equipo.
+
 - El último cierre del conductor ocurrió en `L_CiudadUrbana` a los 65 s. Con Direct3D 12, el arranque registró 150 fallos de creación de estados gráficos. El volcado sitúa la infracción de acceso en `FPipelineStateStats::UpdateStats`, al ejecutar `ExecuteSetComputePipelineState` durante el procesamiento de comandos de renderizado. Hubo cinco órdenes de pulso durante la conducción. El usuario sintió el golpe y describió falta de resistencia desde que entró en la práctica.
 - Windows abre ahora la ciudad con Direct3D 11 y SM5. En la RTX 3060 Ti, el paquete completó la primera prueba en escritorio en 182 s con 15 impactos, pausas y reinicios. Alternó recorridos de 11,7 m desde la salida y 92,2 m por el Distrito Norte con tráfico activo. Hubo cero errores de creación de estados gráficos. OpenXR encontró el servicio de Meta, pero en este arranque el visor estaba inactivo. Registro local en `Saved/AgentReports/g920_estabilidad_ciudad.log`.
 - En el mismo mapa y paquete, con dos vistas emuladas y el G920 aislado, se reprodujo el cierre al cabo de 68 s de proceso tras cuatro impactos. El hilo gráfico entró en `DiscardAndSwap` y falló al utilizar un estado de cómputo durante las sombras. La configuración final desactiva esa retirada periódica. Registro de comparación en `Saved/AgentReports/ciudad_estabilidad_estereo.log`.
@@ -139,7 +141,9 @@ Las pruebas de inyección son herramientas del editor, no lógica Python del pro
 
 ## Repositorio
 
-Base de gobernanza: cd30fcc y 9731d0f; circuito corto: 7c37ebb; ampliación urbana: d7f496a, después del punto de interrupción dbf8944 del usuario; menú/captura: 599d0ad. Sonido/retroalimentación en feature/audio-retroalimentacion. El usuario configuró el remoto GitHub origin; no se hizo push automático. Consultar git log y git status para el cierre actual.
+La rama predeterminada del equipo en GitHub es `main`. Se comprobó la versión de conducción `06622e5` en un clon nuevo por HTTPS y se descargó `L_CiudadUrbana.umap` desde Git LFS. GitHub ofreció los 2057 objetos LFS de esa revisión. [Instrucciones de clonación para el equipo](../README.md#clonar-el-proyecto-desde-github).
+
+Como referencias históricas, los commits `cd30fcc` y `9731d0f` establecieron la base del proyecto. El circuito corto se incorporó en `7c37ebb`, la ampliación urbana en `d7f496a` después del punto de interrupción `dbf8944`, y el menú en `599d0ad`. El trabajo de la rama `feature/audio-retroalimentacion` está integrado en `main`.
 
 ## Siguiente hito
 

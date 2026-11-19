@@ -35,7 +35,7 @@ Estado: SCN-01, VEH-01, URB-01/TRA-01, SES-01, AUD-01 y FEED-01 verificados en e
 - [ ] **DOC-01 Actualizar documento académico.** Reescribir metodología para G920 y complemento realmente construido; explicitar objetivos de entrenamiento, limitaciones, resultados y fuentes verificadas. Revisar extensión por sección y exportar PDF con revisión visual. No inventar evaluación de usuarios ni eficacia terapéutica.
 - [ ] **MKT-01 Empresa y publicidad.** Reunir o crear logo, objetivos y material de presentación; preparar web y contenido de una red social. Cierre: URL activa y contenido revisado por el equipo cuando se autorice publicarlo. No crear cuentas ni subir datos personales por inferencia de la rúbrica.
 - [ ] **VID-01 Mini documental.** Guion, captura del escenario, sesión real y explicación del ciclo háptico; describir qué construyó el equipo. Cierre: archivo reproducible con audio legible y créditos.
-- [ ] **DEL-01 Carpeta final.** Preparar ejecutable/instrucciones, PDF, video, vínculos y créditos/licencias. Verificar accesibilidad en el destino autorizado de Google Drive; no marcar entregado solo por reunir archivos locales.
+- [ ] **DEL-01 Carpeta final.** La [guía de clonación](../README.md#clonar-el-proyecto-desde-github) permite al equipo descargar `main` y abrir la ciudad en Unreal. Para la entrega, reunir el ejecutable, las instrucciones para jugadores, el PDF, el video, los vínculos y los créditos. Verificar el acceso en la carpeta de Google Drive autorizada.
 
 ## P2 — Mejoras que no bloquean el mínimo
 
