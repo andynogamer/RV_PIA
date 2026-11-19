@@ -2,16 +2,102 @@
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
+#include "Misc/App.h"
+#include "HAL/IConsoleManager.h"
 
 #if PLATFORM_WINDOWS
 #include "Windows/WindowsHWrapper.h"
 #include "Windows/AllowWindowsPlatformTypes.h"
+#include "Windows/AllowWindowsPlatformAtomics.h"
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 #include <windows.gaming.input.h>
+#include <windows.gaming.input.forcefeedback.h>
 #include <wrl/client.h>
+#include <wrl/event.h>
 #include <wrl/wrappers/corewrappers.h>
+#include "Windows/HideWindowsPlatformAtomics.h"
 #include "Windows/HideWindowsPlatformTypes.h"
+
+namespace
+{
+    namespace FF = ABI::Windows::Gaming::Input::ForceFeedback;
+    using Microsoft::WRL::ComPtr;
+    using FLoadResult = FF::ForceFeedbackLoadEffectResult;
+    using FLoadOperation = ABI::Windows::Foundation::IAsyncOperation<FLoadResult>;
+    static TAutoConsoleVariable<float> CollisionGain(TEXT("rv.G920.CollisionGain"), .15f,
+        TEXT("Normalized collision pulse gain, 0 disables, maximum 0.25."));
+
+    struct FWheelImpact
+    {
+        ComPtr<FF::IForceFeedbackMotor> Motor;
+        ComPtr<FF::IForceFeedbackEffect> Effect;
+        TAtomic<bool> bLoaded{false};
+        bool bStarted = false;
+
+        static TSharedPtr<FWheelImpact, ESPMode::ThreadSafe> Load(ABI::Windows::Gaming::Input::IRacingWheel* Wheel)
+        {
+            auto State = MakeShared<FWheelImpact, ESPMode::ThreadSafe>();
+            FF::ForceFeedbackEffectAxes Axes{};
+            if (FAILED(Wheel->get_WheelMotor(&State->Motor)) || !State->Motor ||
+                FAILED(State->Motor->get_SupportedAxes(&Axes)) || !(Axes & FF::ForceFeedbackEffectAxes_X)) return {};
+            ComPtr<FF::IPeriodicForceEffectFactory> Factory;
+            ComPtr<FF::IPeriodicForceEffect> Wave;
+            using Microsoft::WRL::Wrappers::HStringReference;
+            if (FAILED(RoGetActivationFactory(HStringReference(RuntimeClass_Windows_Gaming_Input_ForceFeedback_PeriodicForceEffect).Get(), IID_PPV_ARGS(&Factory))) ||
+                FAILED(Factory->CreateInstance(FF::PeriodicForceEffectKind_SineWave, &State->Effect)) ||
+                FAILED(State->Effect.As(&Wave)) ||
+                FAILED(Wave->SetParameters({1.f,0.f,0.f}, 20.f, 0.f, 0.f, {150 * ETimespan::TicksPerMillisecond})) ||
+                FAILED(State->Effect->put_Gain(0.0))) return {};
+            ComPtr<FLoadOperation> Operation;
+            if (FAILED(State->Motor->LoadEffectAsync(State->Effect.Get(), &Operation))) return {};
+            // Retain this device until loading completes, even if the map or device changes.
+            // Completion only makes the effect available. A past collision is never replayed.
+            auto Completion = Microsoft::WRL::Callback<ABI::Windows::Foundation::IAsyncOperationCompletedHandler<FLoadResult>>(
+                [State](FLoadOperation* Op, AsyncStatus Status) -> HRESULT
+                {
+                    FLoadResult Result{};
+                    const bool bReady = Status == AsyncStatus::Completed && SUCCEEDED(Op->GetResults(&Result)) &&
+                        Result == FF::ForceFeedbackLoadEffectResult_Succeeded;
+                    State->bLoaded.Store(bReady);
+                    UE_LOG(LogTemp, Display, TEXT("G920: efecto de choque %s"), bReady ? TEXT("cargado") : TEXT("no disponible"));
+                    return S_OK;
+                });
+            if (FAILED(Operation->put_Completed(Completion.Get()))) return {};
+            return State;
+        }
+        void Stop()
+        {
+            if (bStarted) { Effect->Stop(); bStarted = false; }
+        }
+        void Play()
+        {
+            if (!bLoaded.Load()) return;
+            Stop();
+            const float Gain = FMath::Clamp(CollisionGain.GetValueOnGameThread(), 0.f, .25f);
+            boolean Enabled = false, Paused = true;
+            if (Gain > 0.f && SUCCEEDED(Motor->get_IsEnabled(&Enabled)) && Enabled &&
+                SUCCEEDED(Motor->get_AreEffectsPaused(&Paused)) && !Paused && SUCCEEDED(Effect->put_Gain(Gain)))
+                bStarted = SUCCEEDED(Effect->Start());
+            if (bStarted) UE_LOG(LogTemp, Display, TEXT("G920: pulso por choque, 150 ms"));
+        }
+        ~FWheelImpact()
+        {
+            Stop();
+            if (bLoaded.Load())
+            {
+                ComPtr<__FIAsyncOperation_1_boolean> Unload;
+                Motor->TryUnloadEffectAsync(Effect.Get(), &Unload);
+            }
+        }
+    };
+    bool WheelHasInputFocus(void* Window)
+    {
+        if (!Window) return false;
+        if (FApp::UseVRFocus()) return FApp::HasVRFocus();
+        return GetAncestor(static_cast<HWND>(Window), GA_ROOT)==GetForegroundWindow();
+    }
+}
 #endif
 
 struct FRVWheelInput::FSystemWheel
@@ -21,12 +107,17 @@ struct FRVWheelInput::FSystemWheel
     Microsoft::WRL::ComPtr<ABI::Windows::Gaming::Input::IRacingWheelStatics> Wheels;
     Microsoft::WRL::ComPtr<ABI::Windows::Gaming::Input::IRawGameControllerStatics> Controllers;
     Microsoft::WRL::ComPtr<FWheel> Matched;
+    Microsoft::WRL::ComPtr<ABI::Windows::Gaming::Input::IUINavigationControllerStatics2> NavigationFactory;
+    Microsoft::WRL::ComPtr<ABI::Windows::Gaming::Input::IUINavigationController> Navigation;
+    bool bDrivingLayout = false;
+    TSharedPtr<FWheelImpact, ESPMode::ThreadSafe> Impact;
 
     FSystemWheel()
     {
         using Microsoft::WRL::Wrappers::HStringReference;
         RoGetActivationFactory(HStringReference(RuntimeClass_Windows_Gaming_Input_RacingWheel).Get(), IID_PPV_ARGS(&Wheels));
         RoGetActivationFactory(HStringReference(RuntimeClass_Windows_Gaming_Input_RawGameController).Get(), IID_PPV_ARGS(&Controllers));
+        RoGetActivationFactory(HStringReference(RuntimeClass_Windows_Gaming_Input_UINavigationController).Get(), IID_PPV_ARGS(&NavigationFactory));
     }
 
     bool Matches(FWheel* Wheel) const
@@ -35,15 +126,10 @@ struct FRVWheelInput::FSystemWheel
         Microsoft::WRL::ComPtr<IGameController> Controller;
         Microsoft::WRL::ComPtr<IRawGameController> Raw;
         UINT16 Vendor = 0, ProductId = 0;
-        boolean HasClutch = false, HasShifter = false;
-        INT32 MaxGear = 0;
         return SUCCEEDED(Wheel->QueryInterface(IID_PPV_ARGS(&Controller))) &&
             SUCCEEDED(Controllers->FromGameController(Controller.Get(), &Raw)) && Raw &&
             SUCCEEDED(Raw->get_HardwareVendorId(&Vendor)) && Vendor == 0x046d &&
-            SUCCEEDED(Raw->get_HardwareProductId(&ProductId)) && ProductId == 0xc262 &&
-            SUCCEEDED(Wheel->get_HasClutch(&HasClutch)) && HasClutch &&
-            SUCCEEDED(Wheel->get_HasPatternShifter(&HasShifter)) && HasShifter &&
-            SUCCEEDED(Wheel->get_MaxPatternShifterGear(&MaxGear)) && MaxGear >= 6;
+            SUCCEEDED(Raw->get_HardwareProductId(&ProductId)) && ProductId == 0xc262;
     }
 
     FWheel* FindConnected()
@@ -58,26 +144,80 @@ struct FRVWheelInput::FSystemWheel
                 if (SUCCEEDED(Connected->GetAt(Index, &Candidate)) &&
                     (Candidate.Get() == Matched.Get() || Matches(Candidate.Get())))
                 {
-                    Matched = Candidate;
+                    if (Candidate.Get() != Matched.Get())
+                    {
+                        Matched = Candidate;
+                        Impact = FWheelImpact::Load(Candidate.Get());
+                        Navigation.Reset();
+                        Microsoft::WRL::ComPtr<ABI::Windows::Gaming::Input::IGameController> Controller;
+                        if (NavigationFactory && SUCCEEDED(Candidate.As(&Controller)))
+                            NavigationFactory->FromGameController(Controller.Get(), &Navigation);
+                        boolean Clutch = false, Shifter = false;
+                        INT32 MaxGear = 0;
+                        bDrivingLayout = SUCCEEDED(Candidate->get_HasClutch(&Clutch)) && Clutch &&
+                            SUCCEEDED(Candidate->get_HasPatternShifter(&Shifter)) && Shifter &&
+                            SUCCEEDED(Candidate->get_MaxPatternShifterGear(&MaxGear)) && MaxGear >= 6;
+                    }
                     return Matched.Get();
                 }
             }
         }
         Matched.Reset();
+        Impact.Reset();
+        Navigation.Reset();
         return nullptr;
     }
 #endif
 };
+
+void FRVWheelInput::StopCollisionPulse()
+{
+#if PLATFORM_WINDOWS
+    if (SystemWheel && SystemWheel->Impact) SystemWheel->Impact->Stop();
+#endif
+}
+
+void FRVWheelInput::PlayCollisionPulse(void* Window)
+{
+#if PLATFORM_WINDOWS
+    if (SystemWheel && WheelHasInputFocus(Window) && SystemWheel->FindConnected() && SystemWheel->Impact)
+        SystemWheel->Impact->Play();
+#endif
+}
+
+TOptional<ERVWheelButton> FRVWheelInput::ReadButtons(void* Window)
+{
+#if PLATFORM_WINDOWS
+    static const bool bIsolated = FParse::Param(FCommandLine::Get(), TEXT("RVNoWheelInput"));
+    if (bIsolated || !WheelHasInputFocus(Window)) return {};
+    if (!SystemWheel) SystemWheel = MakeUnique<FSystemWheel>();
+    if (!SystemWheel->FindConnected() || !SystemWheel->Navigation) return {};
+    using namespace ABI::Windows::Gaming::Input;
+    UINavigationReading Reading{};
+    if (FAILED(SystemWheel->Navigation->GetCurrentReading(&Reading))) return {};
+    ERVWheelButton Buttons = ERVWheelButton::None;
+    if (Reading.RequiredButtons & RequiredUINavigationButtons_Up) Buttons |= ERVWheelButton::Up;
+    if (Reading.RequiredButtons & RequiredUINavigationButtons_Down) Buttons |= ERVWheelButton::Down;
+    if (Reading.RequiredButtons & RequiredUINavigationButtons_Accept) Buttons |= ERVWheelButton::Accept;
+    if (Reading.RequiredButtons & RequiredUINavigationButtons_Cancel) Buttons |= ERVWheelButton::Back;
+    if (Reading.RequiredButtons & RequiredUINavigationButtons_Menu) Buttons |= ERVWheelButton::Menu;
+    if (Reading.OptionalButtons & OptionalUINavigationButtons_Context1) Buttons |= ERVWheelButton::Handbrake;
+    if (Reading.OptionalButtons & OptionalUINavigationButtons_Context2) Buttons |= ERVWheelButton::Center;
+    return Buttons;
+#else
+    return {};
+#endif
+}
 
 bool FRVWheelInput::ReadAutomatic(void* Window, FRVWheelSample& Sample)
 {
     bHasReading = false;
     bAutomaticLayout = false;
 #if PLATFORM_WINDOWS
-    if (!Window || GetAncestor(static_cast<HWND>(Window), GA_ROOT) != GetForegroundWindow()) return false;
+    if (!WheelHasInputFocus(Window)) return false;
     if (!SystemWheel) SystemWheel = MakeUnique<FSystemWheel>();
     auto* Wheel = SystemWheel->FindConnected();
-    if (!Wheel) return false;
+    if (!Wheel || !SystemWheel->bDrivingLayout) return false;
     bAutomaticLayout = true;
     ABI::Windows::Gaming::Input::RacingWheelReading Reading{};
     if (FAILED(Wheel->GetCurrentReading(&Reading)) || Reading.Timestamp == 0 ||
@@ -259,10 +399,8 @@ bool FRVWheelInput::Poll(void* Window, FRawSample& Sample)
 
 bool FRVWheelInput::Read(void* Window, FRVWheelSample& Sample)
 {
-#if WITH_EDITOR
     static const bool bOfflineTest = FParse::Param(FCommandLine::Get(), TEXT("RVNoWheelInput"));
     if (bOfflineTest) return false;
-#endif
     FRawSample Raw;
     if (!IsCalibrated())
     {

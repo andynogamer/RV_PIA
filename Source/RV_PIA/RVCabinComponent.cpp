@@ -1,5 +1,6 @@
 #include "RVCabinComponent.h"
 #include "RVDrivingAssistComponent.h"
+#include "RVDrivingFeedbackComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -175,6 +176,22 @@ void URVCabinComponent::UpdateCapture(int32 Index,const FVector& Eye)
     Capture->CaptureScene();
 }
 
+bool URVCabinComponent::CenterHeadsetOnSeat()
+{
+    if (!CabinCamera || !CabinCamera->GetAttachParent() ||
+        !UHeadMountedDisplayFunctionLibrary::HasValidTrackingPosition() ||
+        UHeadMountedDisplayFunctionLibrary::GetHMDWornState()==EHMDWornState::NotWorn) return false;
+
+    // OpenXR resets vertical position too in Local space. The camera socket already supplies seat height.
+    if (UHeadMountedDisplayFunctionLibrary::GetTrackingOrigin()!=EHMDTrackingOrigin::Local)
+        UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(EHMDTrackingOrigin::Local);
+    const FTransform Seat = CabinCamera->GetAttachParent()->GetSocketTransform(CabinCamera->GetAttachSocketName());
+    const float ForwardYaw = Seat.InverseTransformVectorNoScale(GetOwner()->GetActorForwardVector()).Rotation().Yaw;
+    UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition(ForwardYaw);
+    UE_LOG(LogTemp, Display, TEXT("RUTA: asiento centrado en espacio Local, rumbo relativo %.1f"), ForwardYaw);
+    return true;
+}
+
 FString URVCabinComponent::MirrorName() const
 {
     return SelectedMirror==INDEX_NONE ? FString() : FString(Mounts[SelectedMirror].Label);
@@ -303,6 +320,8 @@ void URVCabinComponent::UpdateInstruments()
     }
 
     const auto* Controller=Cast<ARVPracticePlayerController>(CastChecked<APawn>(GetOwner())->GetController());
+    const bool bInVR = Controller && Controller->UsesStereoViewport();
+    const auto* Feedback = bInVR ? GetOwner()->FindComponentByClass<URVDrivingFeedbackComponent>() : nullptr;
     const int32 Step=Assist->GetCalibrationStep();
     int32 Pedal=INDEX_NONE, Shifter=7, Steering=0;
     FString Message;
@@ -322,14 +341,18 @@ void URVCabinComponent::UpdateInstruments()
         Pedal=0;
         Message=TEXT("Pisa el embrague. Mantén la marcha.");
     }
-    else if (Controller && Controller->bShowDrivingGuide)
+    else if (Feedback && Feedback->HasVisibleFeedback() && Feedback->LatestFeedback.Kind == ERVFeedbackKind::Penalty)
+    {
+        Message = Feedback->LatestFeedback.Message;
+    }
+    else if (bInVR || (Controller && Controller->bShowDrivingGuide))
     {
         if (Assist->IsWaitingForWheelReport()) { Shifter=0; Message=TEXT("Mueve un mando del G920."); }
         else if (Assist->NeedsWheelNeutral()) { Pedal=0; Message=TEXT("Suelta el acelerador y pisa el embrague."); }
-        else if (Assist->bUrbanMode && Assist->PracticeStage==0)
+        else if (Assist->bUrbanMode && Assist->PracticeStage==0 && Movement->GetHandbrakeInput())
         {
             Pedal=-2;
-            Message=TEXT("Libera el freno de mano.");
+            Message=Assist->bWheelMode ? TEXT("Pulsa X para soltar el freno de mano.") : TEXT("Libera el freno de mano.");
         }
         else if (Assist->bWheelMode && !Assist->SelectedGear && Speed<1)
         {
@@ -396,10 +419,15 @@ void URVCabinComponent::DrawConsole(UCanvas* Canvas,int32 Width,int32 Height)
     if (DisplayInstruction.IsEmpty()) return;
     const bool HasIcon=DisplayPedal!=INDEX_NONE || DisplayShifter!=7 || DisplaySteering!=0;
     if (DisplayPedal>=0) G.Pedals(13,81,DisplayPedal);
+    else if (DisplayPedal==-2 && Assist->bWheelMode) G.WheelButton(57,100,'X');
     else if (DisplayPedal==-2) G.Key(9,84,91,TEXT("Espacio"));
     else if (DisplayShifter!=7) G.Shifter(5,55,DisplayShifter);
     else if (DisplaySteering) G.Wheel(54,101,DisplaySteering);
     const float X=HasIcon ? 119.f : 13.f;
     G.Paragraph(X,54,307-X,DisplayInstruction,16);
-    if (DisplayStep!=INDEX_NONE) G.Text(13,166,TEXT("Enter   Registrar"),14,Mint);
+    if (DisplayStep!=INDEX_NONE)
+    {
+        G.WheelButton(25,177,'A',12);
+        G.Text(44,164,TEXT("Registrar"),14,Mint);
+    }
 }

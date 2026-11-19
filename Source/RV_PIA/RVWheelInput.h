@@ -2,6 +2,9 @@
 
 #include "CoreMinimal.h"
 
+enum class ERVWheelButton : uint8 { None=0, Up=1, Down=2, Accept=4, Back=8, Menu=16, Handbrake=32, Center=64 };
+ENUM_CLASS_FLAGS(ERVWheelButton);
+
 struct FRVWheelSample
 {
     float Steering = 0.f;
@@ -24,6 +27,9 @@ public:
 
     bool IsCalibrated() const;
     bool Read(void* Window, FRVWheelSample& Sample);
+    TOptional<ERVWheelButton> ReadButtons(void* Window);
+    void PlayCollisionPulse(void* Window);
+    void StopCollisionPulse();
     void StartCalibration();
     void CancelCalibration();
     void CaptureStep(void* Window);

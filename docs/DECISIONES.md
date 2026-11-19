@@ -106,6 +106,14 @@ Por petición expresa del usuario, el cambio manual tiene cinco marchas de avanc
 
 El 18 de noviembre de 2026 se añadió un patio independiente accesible desde ciudad y carretera. Las dos maniobras comparten el vehículo y los controles del simulador. Para avanzar hay que cruzar la entrada del cajón en el sentido solicitado, colocar la carrocería completa dentro de las marcas con hasta 10 grados de desviación y mantener el freno de mano durante 1,5 segundos por debajo de 0,5 km/h. Reiniciar devuelve al conductor al acceso.
 
+## D-020 — Asiento y menús con el G920
+
+El 19 de noviembre de 2026 el usuario pidió corregir el inicio de espaldas al volante y manejar los menús desde el G920. Se toma la postura sentada al confirmar la práctica y se permite repetir el ajuste al parar. OpenXR usa el origen Local para poder centrar también la altura. El límite estacionario lo configura el usuario en las Quest. En Windows se leen los botones semánticos del volante mediante `UINavigationController`. La cruceta elige, A confirma, B vuelve, Menú pausa, Y centra y X acciona el freno de mano al parar. Se mantiene el teclado de desarrollo. [API del visor en Unreal 5.6](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/HeadMountedDisplayFunctionLibrary?application_version=5.6) y [botones de navegación de Windows](https://learn.microsoft.com/en-us/windows/uwp/gaming/racing-wheel-and-force-feedback).
+
+## D-021 — Información de conducción y respuesta al choque
+
+En las Quest 3 el conductor encontró que la velocidad y las instrucciones tapaban el camino. El cuadro fijo de la cabina muestra marcha y velocidad. La consola presenta una instrucción o un aviso por vez. La guía del G920 reproduce las cuatro letras, sus colores y su disposición en el aro. Para el choque se adoptó un efecto senoidal finito de Windows.Gaming.Input tras comprobar la capacidad del motor y la carga del efecto en este G920. La penalización educativa y la repetición de pulsos se controlan por separado. [Hardware](HARDWARE.md).
+
 ## Registro de decisiones futuras
 
 Identificador y título; fecha; estado; problema; evidencia/fuente; decisión; consecuencias; validación; alternativa relevante si explica el costo; condición de revisión. Evitar abrir un registro nuevo por cambios triviales.

@@ -9,8 +9,9 @@ using namespace RVInstruments;
 
 void ARVPracticeHUD::DrawHUD()
 {
-    Super::DrawHUD();
     const auto* PC = Cast<ARVPracticePlayerController>(PlayerOwner);
+    if (PC && PC->UsesStereoViewport()) return;
+    Super::DrawHUD();
     if (!Canvas || !PC || !PC->GetPawn() || PC->SessionScreen != ERVSessionScreen::Driving ||
         Canvas->ClipX < 100 || Canvas->ClipY < 100) return;
     const auto* Assist = PC->GetPawn()->FindComponentByClass<URVDrivingAssistComponent>();
@@ -146,8 +147,9 @@ void ARVPracticeHUD::DrawHUD()
     }
     else if (Assist->bUrbanMode && Assist->PracticeStage==0 && !Assist->NeedsWheelNeutral() && (!Wheel || Assist->SelectedGear==0))
     {
-        G.Key(ArtX+9,Y+56,106,TEXT("Espacio"));
-        Title = TEXT("Pulsa y suelta el freno de mano.");
+        if (Wheel) G.WheelButton(ArtX+62,Y+74,'X');
+        else G.Key(ArtX+9,Y+56,106,TEXT("Espacio"));
+        Title = Wheel ? TEXT("Pulsa X en el G920 para soltar el freno de mano.") : TEXT("Pulsa y suelta el freno de mano.");
         Hint = Wheel ? TEXT("Después, pisa el embrague y pon primera.") : TEXT("Después, acelera con W.");
     }
     else if (Assist->IsParkingPractice())

@@ -68,6 +68,8 @@ private:
     UFUNCTION() void OnVehicleHit(UPrimitiveComponent* HitComponent,AActor* Other,UPrimitiveComponent* OtherComponent,FVector Impulse,const FHitResult& Hit);
     UPROPERTY() TObjectPtr<URVDrivingAssistComponent> Assist;
     TMap<FName,float> LastIncidents;
+    TMap<TWeakObjectPtr<AActor>,float> LastImpactContacts;
+    void RecordImpact(AActor* Other);
     TMap<TWeakObjectPtr<AActor>,float> StopTimers;
     TSet<TWeakObjectPtr<AActor>> PassedStops;
     TSet<TWeakObjectPtr<AActor>> RewardedStops;

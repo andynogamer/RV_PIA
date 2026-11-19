@@ -84,13 +84,13 @@ void ARVParkingScenario::UpdateParking(const FTransform& Car, float SpeedKmh, bo
 
 FString ARVParkingScenario::Instruction() const
 {
-    if (Complete()) return TEXT("Ambas maniobras completadas. Pulsa Home para repetir.");
+    if (Complete()) return TEXT("Ambas maniobras completadas. Puedes repetir desde la pausa.");
     switch (Hint)
     {
         case EHint::WrongEntry: return TEXT("Sal al pasillo y vuelve a entrar por la boca del cajón.");
         case EHint::Straighten: return TEXT("Endereza el coche siguiendo las líneas del cajón.");
         case EHint::Center: return TEXT("Centra el coche dentro de las líneas.");
-        case EHint::Brake: return TEXT("Detente y mantén Espacio para aplicar el freno de mano.");
+        case EHint::Brake: return TEXT("Detente y aplica el freno de mano.");
         case EHint::Hold: return TEXT("Mantén el freno de mano hasta confirmar.");
         default: return CompletedBays==0 ? TEXT("Entra de frente al cajón A1.") : TEXT("Estaciona de reversa en B2. Usa los espejos.");
     }

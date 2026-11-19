@@ -115,6 +115,7 @@ class RV_PIA_API ARVRoadsidePines : public AActor
     GENERATED_BODY()
 public:
     ARVRoadsidePines();
+    virtual void BeginPlay() override;
     UPROPERTY(VisibleAnywhere, Category="Scenery") TObjectPtr<UHierarchicalInstancedStaticMeshComponent> Trunks;
     UPROPERTY(VisibleAnywhere, Category="Scenery") TObjectPtr<UHierarchicalInstancedStaticMeshComponent> Crowns;
 };

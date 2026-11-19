@@ -8,14 +8,17 @@ class UTextBlock;
 class UVerticalBox;
 class USizeBox;
 
-/** Desktop start/pause menu. Built with native UMG, without an editor-only dependency. */
+/** Start/pause menu shared by the desktop viewport and the OpenXR quad. */
 UCLASS()
 class RV_PIA_API URVSessionMenuWidget : public UUserWidget
 {
     GENERATED_BODY()
 public:
-    void Configure(bool bPaused, bool bUrban);
+    void Configure(bool bPaused, bool bUrban, bool bStereo);
     void FocusPrimaryButton();
+    void SelectMenuButton(int32 Offset);
+    void ActivateMenuButton();
+    void ShowSeatStatus(bool bCentered);
     UFUNCTION(BlueprintCallable, Category="Session") void ToggleControls();
     UFUNCTION(BlueprintPure, Category="Session") bool IsShowingControls() const { return bControlsVisible; }
 protected:
@@ -43,4 +46,6 @@ private:
     bool bPauseMenu=false;
     bool bUrbanMenu=true;
     bool bControlsVisible=false;
+    bool bStereoMenu=false;
+    UPROPERTY(Transient) TObjectPtr<UButton> SelectedButton;
 };

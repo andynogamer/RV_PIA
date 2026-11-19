@@ -63,6 +63,9 @@ public:
     void ToggleWheelCalibration();
     void CaptureWheelCalibrationStep();
     void ToggleWheelMode();
+    TOptional<ERVWheelButton> ReadWheelButtons();
+    void ToggleParkingBrake();
+    void PlayCollisionPulse();
 
 private:
     UPROPERTY() TObjectPtr<AWheeledVehiclePawn> Vehicle;

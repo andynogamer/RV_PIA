@@ -1,6 +1,29 @@
 # Estado comprobado del proyecto
 
-Fecha de la última comprobación: 18 de noviembre de 2026, America/Mexico_City.
+Fecha de la última comprobación: 19 de noviembre de 2026, America/Mexico_City.
+
+## Parabrisas, carretera y choque con el G920
+
+- **Observación en las Quest.** El usuario confirmó el manejo del menú con el G920. Indicó que el HUD de escritorio tapaba el camino y que el juego se cerró al volver del arbolado de Sierra del Pino. En la sesión afectada, el registro sitúa la aserción de `PipelineStateCache.cpp:1864` en `L_Carretera`, a los 124 s de arrancar. La traza apunta a la consolidación de estados gráficos.
+- **Implementado.** La vista estéreo utiliza el velocímetro físico del tablero y presenta una indicación contextual en la consola. La guía de controles muestra la disposición real de A, B, X e Y. El G920 inicia un pulso finito por choque. En Sierra del Pino la geometría de colisión sigue el tronco de los pinos, separada de las ramas.
+- **Motor físico identificado.** Windows devolvió el eje X habilitado en el G920. Aceptó cargar y descargar un efecto senoidal de 20 Hz y 150 ms en reposo. El ejecutable de entrega también lo cargó en el G920 al abrir Sierra del Pino, según `carretera_g920_entrega_usuario.log`. La intensidad percibida y el apagado al pausar durante un impacto quedan por comprobar con el conductor.
+- **Verificado en Win64 Development con OpenXR y la RTX 3060 Ti.** Pasó `RutaVirtual.Road.HighwayShoulder` en el ejecutable empaquetado. El coche Chaos salió hacia un pino, regresó al carril a los 25,5 s y registró un choque con otro tronco a los 36,4 s. La prueba terminó a los 135 s, con el volante físico aislado. Registro en `Saved/AgentReports/impacto_carretera_final.log`.
+- **Revisión visual.** La captura estéreo del ejecutable en Sierra del Pino mostró el parabrisas libre en los dos ojos. La velocidad y la marcha aparecen en el cuadro, y la ayuda en la consola derecha. La guía de controles muestra Y amarillo arriba, A verde abajo, X azul a la izquierda y B rojo a la derecha. Capturas locales en `Saved/StagedBuilds/Windows/RV_PIA/Saved/Screenshots/Windows/hud_carretera.png` y `Saved/StagedBuilds/Windows/RV_PIA/Saved/AgentReports/quest_controles_g920.png`. Falta valorar la lectura desde la posición real del conductor.
+- **Ajuste de Windows.** Se sincronizó la consolidación de la caché gráfica. Durante la conducción inicial se registraron seis errores al precargar estados gráficos de componentes. Con esa precarga desactivada hubo cero durante la prueba anterior. Al arrancar aún aparecen errores de creación de estados gráficos, antes de conducir. Para volver al comportamiento original, retirar las dos líneas `r.pso.EnableAsyncCacheConsolidation` y `r.PSOPrecache.Components` de `Config/Windows/WindowsEngine.ini`, repetir el stage del paquete y reiniciar. La prueba cubre este recorrido y su duración.
+
+## Asiento y botones del Logitech G920 en las Quest 3
+
+- **Implementado.** En inicio y pausa se elige con la cruceta, se confirma con A y se vuelve con B. El botón de menú abre la pausa. Al comenzar, OpenXR usa la postura actual como posición de los ojos en el asiento y alinea el rumbo con el vehículo. Y repite el ajuste estando detenido o en pausa. X acciona el freno de mano al detenerse.
+- **Verificado en Unreal.** Compilaron Editor y Game Win64 Development. En la ciudad, con Link activo y el volante aislado, pasó `RutaVirtual.Session.StereoMenu`. Se probaron selección, inicio, pausa, regreso, freno de mano y el caso de mantener A al reconectar. Tras el centrado, con el visor quieto, la prueba midió 0,0 cm entre la cámara y su anclaje, y 0,0° de diferencia de rumbo respecto al coche. Registro en `Saved/AgentReports/asiento_g920_openxr.log`.
+- **Ejecutable y hardware.** Windows enumeró la cruceta y las etiquetas A/B, X/Y y Menú del G920. Con el ejecutable Win64 actualizado, la primera prueba automática abrió el menú pero no consiguió centrar el asiento. En la sesión interactiva posterior, con el usuario dentro de Link, el ejecutable abrió la ciudad, obtuvo foco en OpenXR, registró el centrado y pasó a conducción. Registros en `Saved/AgentReports/asiento_g920_paquete.log` y `asiento_g920_usuario.log`. El usuario confirmó que puede manejar el menú con el G920. La postura y la comodidad se validan durante la marcha.
+
+## Menú del Meta Quest 3
+
+- El servicio Meta Link se inició en Windows y Unreal 5.6.1 abrió OpenXR con el runtime Oculus 1.208.0. El usuario veía solo la esquina superior izquierda del menú antiguo en el ojo derecho.
+- **Implementado y verificado en Unreal.** En RV, el inicio y la pausa muestran el mismo menú UMG en una capa cuadrada OpenXR con una textura de 1024 × 1024 para ambos ojos. La selección arranca en la opción principal y admite también las flechas y Enter del teclado. Las sesiones de escritorio conservan el menú de pantalla.
+- **Prueba de integración.** En la ciudad, con el runtime de Meta y el volante aislado, pasó `Automation RunTests RutaVirtual.Session.StereoMenu`. Comprueba los cinco botones dentro de la textura, abrir los controles, entrar a conducción y continuar desde pausa. La captura del menú y el registro están en `Saved/AgentReports/quest_menu.png` y `quest_menu_real_final.log`.
+- **Observación con el visor.** El usuario confirmó que llegó a la cabina con las Quest. Después, Windows.Gaming.Input enumeró un Logitech G920 con embrague y palanca en H. En la consulta pasiva `RacingWheel.GetCurrentReading()` la marca temporal fue cero. En esa primera prueba quedaron pendientes el giro, las marchas, el recentrado sentado y la medición de rendimiento.
+- **Paquete Win64 Development.** Al reutilizar contenido cocinado antes del cambio de C++, la carga de `BP_ControladorPractica` falló. Se volvieron a cocinar y empaquetar los cuatro mapas con `BuildCookRun -cook -stage -pak`. El ejecutable actualizado abrió la ciudad, creó el controlador, alcanzó `SessionScreen = Start` y cerró con código cero en una prueba de carga sin visor. Registros locales en `Saved/AgentReports/quest_menu_recook.log` y `quest_menu_paquete.log`. La prueba con el visor se realizó en la versión de Unreal ejecutada en modo juego.
 
 ## Terreno continuo y práctica de estacionamiento
 
@@ -67,7 +90,7 @@ En una ventana de 1014 × 550 sin visor, el binario cargó la ciudad, comenzó l
 - Claxon conectado a eventos `manual` y `player_obstruction`. El auto lo solicita tras más de 5 s bloqueado por el jugador, con 10 s de cooldown y sin hacerlo por esperar correctamente en rojo o por falta de salida. H activa claxon manual con cooldown de 1 s; el mezclador añade un límite global para evitar superposición excesiva.
 - Motor propio según régimen/carga, rodadura, ambiente, motores espaciales de tráfico, contacto y reconocimiento. Seis sonidos sintetizados originales, con fuentes y generador reproducible. V silencia/restaura; pausa corta efectos y suspende bucles. Son timbres de prototipo, pendientes de ajuste perceptual con auriculares reales.
 - Evaluador educativo: seguridad 0–100, contadores de errores/logros, avisos correctivos, resumen de pausa y reconocimientos. Evalúa los accesos semaforizados con cabezal visible y siete ALTO, contacto significativo, exceso de velocidad sostenido, seguimiento cercano y sentido contrario junto a rutas definidas. No evalúa todos los letreros de la ciudad ni atribuye responsabilidad legal. Reglas y valores: [sonido y retroalimentación](SONIDO_Y_RETROALIMENTACION.md).
-- Solicitudes lógicas de vibración de 0.15 s, sin backend ni salida física. Cancelación por pausa, reinicio y fin. G920/Arduino requieren implementación y comprobación independientes.
+- En la primera versión se emitieron solicitudes lógicas de vibración de 0,15 s. Cancelación por pausa, reinicio y fin. La integración posterior del G920 se documenta en Hardware. Arduino continúa pendiente.
 - IA con preferencias reproducibles de velocidad/reacción, seguimiento dependiente de velocidad, espera breve al verde, comprobación de salida del cruce, luces de freno y animación de ruedas. Conserva las cuatro rutas por splines; no realiza giros entre ellas.
 - Menú inicial UMG nativo, centrado y adaptable al tamaño de la vista, con comenzar/controles/salir. Pausa P/M con continuar, reiniciar, volver al inicio y controles. Inicio y pausa detienen física/tráfico y dejan acelerador a cero; el HUD de conducción se oculta mientras está el menú.
 - Cursor visible y foco de botón dentro del menú, captura de ratón/teclado al conducir sin otro clic en la escena. La inicialización espera al layout válido del viewport, que en PIE puede reportar 2 × 2 al primer tick. Se activó GameGetsMouseControl para PIE en la configuración del proyecto y en la preferencia local existente, con copia previa local fuera de Git.
@@ -98,10 +121,10 @@ Las pruebas de inyección son herramientas del editor, no lógica Python del pro
 
 - Colisión ampliada y rutas comprobadas; otras calles, accesorios y bordes no se han recorrido exhaustivamente. Los 770 × 760 m son límites, no superficie certificada como transitable.
 - El tráfico es cinemático y sigue splines: faltan giros entre rutas, cesión completa al incorporarse, cambios de carril, variedad de carrocerías y direccionales. La reaparición comprueba distancia, no oclusión. Los 50 cabezales importados de la ciudad están enlazados. El evaluador es parcial y usa umbrales de práctica, sin certificación normativa ni clínica.
-- Cabina y HUD son prototipos de escritorio. Falta adaptar/verificar interfaz espacial, postura, recentrado y comodidad con visor real.
-- En Windows se observaron N y 1–6 con la palanca física. Queda verificar R, el recorrido de los tres pedales, ambos extremos del volante y el engrane de las marchas al conducir con embrague. Force feedback y Arduino siguen pendientes.
+- Inicio y pausa ya se muestran en una capa estéreo. Falta comprobar la legibilidad de los instrumentos y la comodidad de la postura durante un recorrido con el visor.
+- En Windows se observaron N y 1–6 con la palanca física. Queda verificar R, el recorrido de los tres pedales, ambos extremos del volante y el engrane de las marchas al conducir con embrague. El pulso de choque del G920 espera confirmación perceptiva. Arduino sigue pendiente.
 - Faltan ajuste/escucha del sonido con el equipo humano, medición CPU/GPU en RV y prueba conjunta del ejecutable empaquetado, visor y mandos. Las compilaciones Editor/Game no demuestran cocina, empaquetado ni funcionamiento en otro equipo.
-- Visor previsto por el usuario: Meta Quest 3, todavía probable y sin prueba de conexión. Se propone Link/OpenXR en PC. El registro de la base avisaba de runtime OpenXR no disponible; debe verificarse con hardware real. La GPU observada es RTX 3060 Ti, sin medición de rendimiento en visor.
+- El 18 de noviembre la primera inspección de Windows no encontró el servicio Link ni un runtime activo. El 19 se comprobó el arranque de Link y la imagen en el Quest 3. Queda medir el recorrido con la RTX 3060 Ti.
 - Se conservó la configuración de render heredada. Claves repetidas, Lumen/ray tracing y opciones Android/Meta no se consideran configuración final.
 - Procedencia/licencia de ciudad pendiente de completar; el usuario autorizó uso privado académico. No se subió este desarrollo a servicios externos desde esta sesión.
 
@@ -111,4 +134,4 @@ Base de gobernanza: cd30fcc y 9731d0f; circuito corto: 7c37ebb; ampliación urba
 
 ## Siguiente hito
 
-Conducir con el G920 y comprobar giro, pedales y palanca físicos en la práctica. Identificar visor y probar PCVR, integrar salida háptica y verificar el recorrido completo con esos dispositivos en el ejecutable empaquetado.
+Conducir con el G920 y comprobar giro, pedales y palanca físicos en la práctica. Probar el Quest 3 por Link, integrar salida háptica y verificar el recorrido completo con esos dispositivos en el ejecutable empaquetado.

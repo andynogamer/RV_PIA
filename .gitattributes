@@ -24,3 +24,4 @@
 *.mp4 filter=lfs diff=lfs merge=lfs -text
 *.zip filter=lfs diff=lfs merge=lfs -text
 SourceArt/Carretera/*.jpg filter=lfs diff=lfs merge=lfs -text
+docs/imagenes/**/*.png filter=lfs diff=lfs merge=lfs -text

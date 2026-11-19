@@ -36,6 +36,7 @@ void URVDrivingFeedbackComponent::SuspendFeedback()
 {
     OverspeedSeconds=FollowingSeconds=WrongWaySeconds=0;
     bHasPrevious=false;PreviousVelocity=FVector::ZeroVector;
+    LastImpactContacts.Reset();
     OnFeedbackStopped.Broadcast();
 }
 void URVDrivingFeedbackComponent::ResetSession()
@@ -87,7 +88,19 @@ void URVDrivingFeedbackComponent::OnVehicleHit(UPrimitiveComponent* HitComponent
     if (!Other || Other==GetOwner() || !Assist || Assist->bPracticePaused || FMath::Abs(Hit.ImpactNormal.Z)>.65f) return;
     const FVector Relative=PreviousVelocity-Other->GetVelocity();
     const float Impact=FMath::Max(FMath::Abs(FVector::DotProduct(Relative,Hit.ImpactNormal)),Impulse.Size()/FMath::Max(1.f,HitComponent->GetMass()))*.036f;
-    if (Impact>=MinimumImpactKmh) RegisterIncident(TEXT("collision"));
+    if (Impact>=MinimumImpactKmh) RecordImpact(Other);
+}
+
+void URVDrivingFeedbackComponent::RecordImpact(AActor* Other)
+{
+    if (!Other || !Assist || Assist->bPracticePaused) return;
+    // Chaos hits and the backup sweep can report the same contact repeatedly.
+    const float Now = GetWorld()->GetTimeSeconds();
+    for (auto It=LastImpactContacts.CreateIterator(); It; ++It)
+        if (!It.Key().IsValid() || Now - It.Value() > .25f) It.RemoveCurrent();
+    if (!LastImpactContacts.Contains(Other)) Assist->PlayCollisionPulse();
+    LastImpactContacts.Add(Other, Now);
+    RegisterIncident(TEXT("collision"));
 }
 void URVDrivingFeedbackComponent::TickComponent(float Dt,ELevelTick Type,FActorComponentTickFunction* Tick)
 {
@@ -107,7 +120,7 @@ void URVDrivingFeedbackComponent::TickComponent(float Dt,ELevelTick Type,FActorC
         FHitResult Contact;FCollisionQueryParams ContactQuery(SCENE_QUERY_STAT(TrainingImpact),false,GetOwner());
         if (GetWorld()->SweepSingleByChannel(Contact,Center,Center+Travel*30,Travel.Rotation().Quaternion(),ECC_Vehicle,
             FCollisionShape::MakeBox(FVector(245,95,45)),ContactQuery) && FMath::Abs(Contact.ImpactNormal.Z)<.65f)
-            RegisterIncident(TEXT("collision"));
+            RecordImpact(Contact.GetActor());
     }
     Dt=FMath::Min(Dt,.1f);
     OverspeedSeconds=Speed>Assist->GetPostedSpeedKmh()+2 ? OverspeedSeconds+Dt : 0;

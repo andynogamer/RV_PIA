@@ -24,6 +24,7 @@ public:
     UFUNCTION(BlueprintCallable, Category="Cabin") void CycleMirror();
     UFUNCTION(BlueprintCallable, Category="Cabin") void FinishAdjustment();
     FString MirrorName() const;
+    bool CenterHeadsetOnSeat();
     int32 GetSelectedMirror() const { return SelectedMirror; }
     UFUNCTION(BlueprintCallable, Category="Cabin") void AdjustMirror(float HorizontalDegrees, float VerticalDegrees);
 private:

@@ -11,6 +11,11 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Engine/World.h"
 #include "RVVehicleAudioComponent.h"
+#include "Components/StereoLayerComponent.h"
+#include "Engine/Engine.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "InputKeyEventArgs.h"
+#include "Slate/WidgetRenderer.h"
 
 ARVPracticePlayerController::ARVPracticePlayerController()
 {
@@ -28,6 +33,9 @@ void ARVPracticePlayerController::PlayerTick(float DeltaTime)
     Super::PlayerTick(DeltaTime);
     if (!IsLocalController()) return;
     if (!bSessionInitialized && GetAssist()) { ShowStartMenu(); return; }
+    // VR Preview can enable stereo after the first player tick.
+    if (SessionMenu && UsesStereoViewport() != (MenuLayer != nullptr))
+        OpenMenu(SessionScreen==ERVSessionScreen::Paused);
     if (SessionMenu && PendingMenuFocusFrames>0)
     {
         int32 Width=0,Height=0;GetViewportSize(Width,Height);
@@ -40,6 +48,7 @@ void ARVPracticePlayerController::PlayerTick(float DeltaTime)
     }
     if (auto* Assist=GetAssist())
     {
+        HandleWheelButtons(Assist->ReadWheelButtons());
         if (SessionScreen==ERVSessionScreen::Driving && bAutoHideGuide && Assist->GetSpeedKmh()>=4.f)
         {
             bAutoHideGuide=false;
@@ -57,10 +66,29 @@ void ARVPracticePlayerController::OpenMenu(bool bPauseMenu)
     if (auto* Cabin=GetPawn()->FindComponentByClass<URVCabinComponent>()) Cabin->FinishAdjustment();
     bSessionInitialized=true;
     if (!Assist->bPracticePaused) Assist->TogglePracticePause();
-    if (SessionMenu) SessionMenu->RemoveFromParent();
+    CloseMenu();
     SessionMenu=CreateWidget<URVSessionMenuWidget>(this,URVSessionMenuWidget::StaticClass());
     if (!SessionMenu) return;
-    SessionMenu->Configure(bPauseMenu,Assist->bUrbanMode);
+    const bool bStereo = UsesStereoViewport();
+    SessionMenu->Configure(bPauseMenu,Assist->bUrbanMode,bStereo);
+    if (bStereo)
+    {
+        MenuLayer = NewObject<UStereoLayerComponent>(this);
+        // Selection changes reuse the same texture. OpenXR's static image can only be acquired once.
+        MenuLayer->bLiveTexture = true;
+        MenuLayer->SetTickableWhenPaused(true);
+        // The component defaults to a face-locked quad. The full square texture is shared by both eyes.
+        MenuLayer->SetRelativeLocation(FVector(130,0,0));
+        MenuLayer->SetQuadSize(FVector2D(100,100));
+        MenuLayer->SetPriority(100);
+        MenuLayer->RegisterComponent();
+        StereoMenuContent = SessionMenu->TakeWidget();
+        DrawStereoMenu();
+        bShowMouseCursor = false;
+        SetInputMode(FInputModeGameOnly());
+        UWidgetBlueprintLibrary::SetFocusToGameViewport();
+        return;
+    }
     SessionMenu->AddToViewport(100);
     bShowMouseCursor=true;
     UWidgetBlueprintLibrary::SetFocusToGameViewport();
@@ -69,6 +97,111 @@ void ARVPracticePlayerController::OpenMenu(bool bPauseMenu)
     Mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
     SetInputMode(Mode);
     PendingMenuFocusFrames=3;
+}
+
+bool ARVPracticePlayerController::UsesStereoViewport() const
+{
+    const auto* Client = GetWorld()->GetGameViewport();
+    return Client && Client->Viewport && GEngine && GEngine->IsStereoscopic3D(Client->Viewport);
+}
+
+void ARVPracticePlayerController::HandleWheelButtons(TOptional<ERVWheelButton> Reading)
+{
+    // Baseline on connection and focus changes. A held button cannot carry through a menu transition.
+    const ERVWheelButton Pressed = Reading.IsSet() && PreviousWheelButtons.IsSet() ?
+        Reading.GetValue() & ~PreviousWheelButtons.GetValue() : ERVWheelButton::None;
+    PreviousWheelButtons = Reading;
+    if (Pressed==ERVWheelButton::None) return;
+    if (EnumHasAnyFlags(Pressed, ERVWheelButton::Center)) { CenterSeat(); return; }
+    if (SessionMenu)
+    {
+        if (EnumHasAnyFlags(Pressed, ERVWheelButton::Back | ERVWheelButton::Menu))
+        {
+            if (SessionMenu->IsShowingControls()) SessionMenu->ToggleControls();
+            else if (SessionScreen==ERVSessionScreen::Paused) StartSession();
+        }
+        else if (EnumHasAnyFlags(Pressed, ERVWheelButton::Up)) SessionMenu->SelectMenuButton(-1);
+        else if (EnumHasAnyFlags(Pressed, ERVWheelButton::Down)) SessionMenu->SelectMenuButton(1);
+        else if (EnumHasAnyFlags(Pressed, ERVWheelButton::Accept)) SessionMenu->ActivateMenuButton();
+        if (MenuLayer) DrawStereoMenu();
+    }
+    else if (SessionScreen==ERVSessionScreen::Driving)
+    {
+        if (EnumHasAnyFlags(Pressed, ERVWheelButton::Menu)) ShowPauseMenu();
+        else if (EnumHasAnyFlags(Pressed, ERVWheelButton::Handbrake)) GetAssist()->ToggleParkingBrake();
+        else if (EnumHasAnyFlags(Pressed, ERVWheelButton::Accept)) CaptureWheelCalibrationStep();
+    }
+}
+
+bool ARVPracticePlayerController::TryCenterSeat()
+{
+    auto* Cabin = GetPawn() ? GetPawn()->FindComponentByClass<URVCabinComponent>() : nullptr;
+    const bool bCentered = Cabin && Cabin->CenterHeadsetOnSeat();
+    if (MenuLayer && SessionMenu)
+    {
+        SessionMenu->ShowSeatStatus(bCentered);
+        DrawStereoMenu();
+    }
+    return bCentered;
+}
+
+void ARVPracticePlayerController::CenterSeat()
+{
+    const auto* Assist = GetAssist();
+    if (UsesStereoViewport() && Assist && (Assist->bPracticePaused || Assist->GetSpeedKmh() <= Assist->GearChangeLimitKmh))
+        TryCenterSeat();
+}
+
+void ARVPracticePlayerController::DrawStereoMenu()
+{
+    const FVector2D Size(1024,1024);
+    auto* Target = Cast<UTextureRenderTarget2D>(MenuLayer->GetTexture());
+    if (!Target)
+    {
+        Target = FWidgetRenderer::CreateTargetFor(Size, TF_Bilinear, false);
+        if (!Target) return;
+        MenuLayer->SetTexture(Target);
+    }
+    // Submit only when the menu or its selection changes, including while the world is paused.
+    auto* Renderer = new FWidgetRenderer(false);
+    Renderer->DrawWidget(Target, StereoMenuContent.ToSharedRef(), Size, 0.f);
+    BeginCleanup(Renderer);
+    MenuLayer->MarkTextureForUpdate();
+}
+
+bool ARVPracticePlayerController::InputKey(const FInputKeyEventArgs& Event)
+{
+    if (MenuLayer && SessionMenu && Event.Event==IE_Pressed)
+    {
+        const FKey Key = Event.Key;
+        if (Key==EKeys::Up || Key==EKeys::Down) SessionMenu->SelectMenuButton(Key==EKeys::Up ? -1 : 1);
+        else if (Key==EKeys::Enter) SessionMenu->ActivateMenuButton();
+        else if ((Key==EKeys::P || Key==EKeys::M || Key==EKeys::Escape) && SessionMenu->IsShowingControls())
+            SessionMenu->ToggleControls();
+        else return Super::InputKey(Event);
+        if (MenuLayer) DrawStereoMenu();
+        return true;
+    }
+    return Super::InputKey(Event);
+}
+
+void ARVPracticePlayerController::CloseMenu()
+{
+    PendingMenuFocusFrames = 0;
+    if (MenuLayer)
+    {
+        MenuLayer->DestroyComponent();
+        MenuLayer = nullptr;
+        StereoMenuContent.Reset();
+    }
+    if (SessionMenu && SessionMenu->IsInViewport()) SessionMenu->RemoveFromParent();
+    SessionMenu = nullptr;
+}
+
+void ARVPracticePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    CloseMenu();
+    Super::EndPlay(EndPlayReason);
 }
 
 bool ARVPracticePlayerController::IsHighway() const
@@ -105,7 +238,7 @@ void ARVPracticePlayerController::ShowStartMenu()
 
 void ARVPracticePlayerController::CaptureDrivingInput()
 {
-    if (SessionMenu) { SessionMenu->RemoveFromParent(); SessionMenu=nullptr; }
+    CloseMenu();
     // The template overlay displays the temporary Chaos clutch neutral. The cabin instruments show the gear engaged by the driver.
     if (UClass* TemplateDisplay=LoadClass<UUserWidget>(nullptr,TEXT("/Game/VehicleTemplate/UI/UI_Vehicle.UI_Vehicle_C")))
     {
@@ -131,7 +264,11 @@ void ARVPracticePlayerController::StartSession()
 {
     if (auto* Assist=GetAssist())
     {
-        if (SessionScreen==ERVSessionScreen::Start) Assist->ResetPractice();
+        if (SessionScreen==ERVSessionScreen::Start)
+        {
+            if (UsesStereoViewport() && GEngine->XRSystem.IsValid() && !TryCenterSeat()) return;
+            Assist->ResetPractice();
+        }
         if (Assist->bPracticePaused) Assist->TogglePracticePause();
         CaptureDrivingInput();
     }
@@ -159,6 +296,7 @@ void ARVPracticePlayerController::QuitSession()
 void ARVPracticePlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
+    InputComponent->BindKey(EKeys::C, IE_Pressed, this, &ARVPracticePlayerController::CenterSeat).bExecuteWhenPaused=true;
     InputComponent->BindKey(EKeys::B, IE_Pressed, this, &ARVPracticePlayerController::CycleMirror);
     InputComponent->BindKey(EKeys::G, IE_Pressed, this, &ARVPracticePlayerController::ToggleGuide);
     InputComponent->BindKey(EKeys::R, IE_Pressed, this, &ARVPracticePlayerController::ToggleReverse);

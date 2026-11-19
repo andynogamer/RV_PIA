@@ -52,7 +52,7 @@ Fuera del mínimo: peatones autónomos complejos, clima dinámico, multijugador,
 ## Pendientes del equipo
 
 - Confirmar tipo de revisión y horario del jueves 19 de noviembre.
-- Confirmar préstamo de Meta Quest 3, indicado como visor probable por el usuario, y disponibilidad de conexión/prueba antes de la entrega.
+- Completar un recorrido con el Meta Quest 3 prestado y valorar la comodidad y la lectura de la cabina. El usuario ya accedió a la cabina y confirmó el manejo del menú con el G920.
 - Validar en el simulador los pedales y la palanca del G920 conectado. Confirmar el modelo exacto de Arduino.
 - Definir responsables humanos de programación, arte y documentación/marketing; no asignar nombres sin acuerdo.
 - Reunir procedencia/licencia del escenario y material de empresa ya existente.

@@ -25,11 +25,11 @@ Motor según régimen/carga, rodadura según velocidad, ambiente suave, motores 
 
 Los seis WAV son **síntesis original de prototipo**, no grabaciones de un automóvil real. Fuentes en `SourceAudio/`, generador reproducible `Scripts/Audio/generate_audio.py`, assets en `/Game/RutaVirtual/Audio/`. Se pueden reemplazar sus timbres posteriormente por grabaciones con procedencia y autorización documentadas. Volumen maestro inicial 0.7, editable en el componente; no equivale a una medida de presión sonora en los auriculares.
 
-## Preparación para vibración
+## Vibración en choques
 
 `URVDrivingFeedbackComponent.OnFeedback` expone código, mensaje, tipo, cambio real de puntos y solicitud háptica lógica normalizada. Las penalizaciones solicitan un pulso de 0.15 s; los reconocimientos tienen solicitud cero. `OnFeedbackStopped` ordena cancelar la salida al pausar, reiniciar y terminar.
 
-**No existe salida física todavía.** La solicitud normalizada no es voltaje, corriente ni duty cycle listo para conectar. El backend futuro debe limitar intensidad/duración, arrancar a cero, implementar watchdog y desconexión, respetar cancelación y validarse con el montaje real según HARDWARE.md. No se alimenta un motor desde un GPIO.
+El G920 recibe un efecto senoidal breve para cada impacto físico nuevo por encima del umbral de 2,5 km/h. El periodo de cuatro segundos para descontar puntos es independiente de ese pulso. Las infracciones sin contacto y los reconocimientos conservan sus avisos. La percepción del efecto se valida con el conductor. Arduino permanece pendiente. [Configuración y prueba del motor](HARDWARE.md).
 
 ## Tráfico refinado
 

@@ -6,6 +6,7 @@
 #include "Fonts/FontMeasure.h"
 #include "Rendering/SlateRenderer.h"
 #include "Styling/CoreStyle.h"
+#include "RVWheelButtonStyle.h"
 
 namespace RVInstruments
 {
@@ -93,6 +94,18 @@ public:
             Line(Tip,Y-41,Tip-Turn*8,Y-47,4,Amber);
             Line(Tip,Y-41,Tip-Turn*8,Y-35,4,Amber);
         }
+    }
+    void WheelButton(float CenterX, float CenterY, TCHAR Letter, float Radius=21.f) const
+    {
+        const FVector2D Center(CenterX*Scale,CenterY*Scale);
+        FCanvasNGonItem Rim(Center,FVector2D(Radius*Scale),32,GWhiteTexture,Muted);
+        Canvas.DrawItem(Rim);
+        FCanvasNGonItem Face(Center,FVector2D((Radius-2)*Scale),32,GWhiteTexture,Panel);
+        Canvas.DrawItem(Face);
+        const FString Glyph = FString::Chr(Letter);
+        const float Size = Radius*.95f;
+        const auto Extent = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Glyph,Font(Size,true))/Scale;
+        Text(CenterX-Extent.X*.5f,CenterY-Extent.Y*.5f,Glyph,Size,RVWheelStyle::LetterColor(Letter));
     }
     void Pedals(float X, float Y, int32 Pressed) const
     {

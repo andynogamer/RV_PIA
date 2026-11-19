@@ -133,6 +133,17 @@ void* URVDrivingAssistComponent::GetWheelWindow() const
     return nullptr;
 }
 
+TOptional<ERVWheelButton> URVDrivingAssistComponent::ReadWheelButtons()
+{
+    return WheelInput ? WheelInput->ReadButtons(GetWheelWindow()) : TOptional<ERVWheelButton>();
+}
+
+void URVDrivingAssistComponent::ToggleParkingBrake()
+{
+    if (Movement && !bPracticePaused && GetSpeedKmh() <= GearChangeLimitKmh)
+        Movement->SetHandbrakeInput(!Movement->GetHandbrakeInput());
+}
+
 void URVDrivingAssistComponent::SubmitWheelSample(float Steering, float Throttle, float Brake, float Clutch, int32 Gear)
 {
     if (bPracticePaused || !FMath::IsFinite(Steering) || !FMath::IsFinite(Throttle) ||
@@ -143,6 +154,7 @@ void URVDrivingAssistComponent::SubmitWheelSample(float Steering, float Throttle
 
 void URVDrivingAssistComponent::DisarmWheel()
 {
+    if (WheelInput) WheelInput->StopCollisionPulse();
     bHasPhysicalWheelSample = false;
     bRequireWheelNeutral = true;
     LastWheelSample = {};
@@ -154,6 +166,13 @@ void URVDrivingAssistComponent::DisarmWheel()
     bReverseMode = false;
     PendingWheelSample.Reset();
     if (bWheelMode) Movement->SetTargetGear(0, true);
+}
+
+void URVDrivingAssistComponent::PlayCollisionPulse()
+{
+    if (bWheelMode && !bPracticePaused && !bRequireWheelNeutral && bHasPhysicalWheelSample &&
+        WheelInput && !WheelInput->IsCalibrating())
+        WheelInput->PlayCollisionPulse(GetWheelWindow());
 }
 
 void URVDrivingAssistComponent::SetWheelMode(bool bEnabled)
@@ -412,7 +431,8 @@ FString URVDrivingAssistComponent::GetInstruction() const
     if (Parking && PracticeStage>0) return Parking->Instruction();
     if (bUrbanMode)
     {
-        if (PracticeStage==0) return TEXT("Estacionado: pulsa y suelta Espacio para liberar el freno de mano.");
+        if (PracticeStage==0) return bWheelMode ? TEXT("Pulsa X en el G920 para liberar el freno de mano.") :
+            TEXT("Estacionado: pulsa y suelta Espacio para liberar el freno de mano.");
         if (PracticeStage==1) return TEXT("Observa el trafico e incorporate con suavidad al carril.");
         if (PracticeStage==2)
         {
@@ -420,11 +440,11 @@ FString URVDrivingAssistComponent::GetInstruction() const
                 return TEXT("Estaciónate en la bahía señalizada y detente para completar el recorrido.");
             return TEXT("Continúa al siguiente objetivo y respeta la señalización.");
         }
-        return TEXT("Recorrido completado. Puedes explorar o reiniciar con Home.");
+        return TEXT("Recorrido completado. Puedes explorar o repetir desde la pausa.");
     }
     if (PracticeStage == 0) return TEXT("Avanza despacio entre los conos. Limite: 30 km/h.");
     if (PracticeStage == 1) return TEXT("Frena y detente dentro de la zona final.");
-    return TEXT("Practica completada. Home para repetir.");
+    return TEXT("Práctica completada. Puedes repetir desde la pausa.");
 }
 
 FString URVDrivingAssistComponent::GetUrbanSummary() const

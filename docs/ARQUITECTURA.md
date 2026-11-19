@@ -71,4 +71,4 @@ Mensajes técnicos de conexión, marcha, calibración y eventos en logs. Cualqui
 
 ## Decisiones aún abiertas
 
-Tecnología concreta de FFB; tipo de conexión Arduino; modelo de visor/runtime; frecuencia objetivo; y selección final de recorrido para la demostración. El vehículo base Chaos y compilación C++ ya están comprobados. Documentar decisiones nuevas en `DECISIONES.md`.
+Sensación y ajuste final del pulso de choque en el G920, conexión Arduino, frecuencia objetivo y recorrido para la demostración. En este equipo se observó Meta Quest 3 con Link y OpenXR. El vehículo base Chaos y compilación C++ ya están comprobados. Documentar decisiones nuevas en `DECISIONES.md`.

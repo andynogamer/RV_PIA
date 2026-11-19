@@ -324,6 +324,39 @@ ARVRoadsidePines::ARVRoadsidePines()
     RootComponent->SetMobility(EComponentMobility::Static);
 }
 
+void ARVRoadsidePines::BeginPlay()
+{
+    Super::BeginPlay();
+    if (!Trunks->GetInstanceCount()) return;
+    auto* Box = LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Cube.Cube"));
+    if (!Box) return;
+    auto* Bodies = NewObject<UInstancedStaticMeshComponent>(this,TEXT("ColisionTroncos"));
+    Bodies->SetupAttachment(Trunks);
+    Bodies->SetMobility(EComponentMobility::Static);
+    Bodies->SetStaticMesh(Box);
+    Bodies->SetVisibility(false);
+    Bodies->SetCastShadow(false);
+    Bodies->SetCanEverAffectNavigation(false);
+    Bodies->SetCollisionObjectType(ECC_WorldStatic);
+    Bodies->SetCollisionResponseToAllChannels(ECR_Ignore);
+    for (auto Channel : {ECC_Vehicle, ECC_Pawn, ECC_PhysicsBody})
+        Bodies->SetCollisionResponseToChannel(Channel,ECR_Block);
+    Bodies->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    // SM_Pine has a baked origin. Its basal vertices span 18.8 cm. The imported
+    // convex hull also encloses the branches, several metres beyond the trunk.
+    const FTransform TrunkShape(FQuat::Identity,FVector(-2702.5,14351.6,141.5),FVector(.188,.188,2.));
+    TArray<FTransform> Shapes;
+    Shapes.Reserve(Trunks->GetInstanceCount());
+    for (int32 Index=0; Index<Trunks->GetInstanceCount(); ++Index)
+    {
+        FTransform Tree;
+        if (Trunks->GetInstanceTransform(Index,Tree)) Shapes.Add(TrunkShape*Tree);
+    }
+    Bodies->AddInstances(Shapes,false,false,false);
+    AddInstanceComponent(Bodies);
+    Bodies->RegisterComponent();
+}
+
 ARVUrbanScenario::ARVUrbanScenario()
 {
     PrimaryActorTick.bCanEverTick=true;
