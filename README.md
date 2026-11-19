@@ -22,6 +22,8 @@ Con el Quest 3 en Meta Horizon Link, abre **VR Preview** o el ejecutable Windows
 
 En RV, mira al cuadro detrás del volante para consultar los km/h y la marcha. La pantalla de la consola muestra una indicación cada vez. En el G920, **A verde** confirma, **B rojo** vuelve, **X azul** acciona el freno de mano e **Y amarillo** centra el asiento. Los choques significativos activan un pulso breve en el aro.
 
+La ciudad es el mapa de inicio en Windows PCVR. Para sentir el retorno del volante al entrar en la cabina, deja la palanca en **N**, suelta el acelerador y pon el aro cerca del centro.
+
 **Prueba rápida de la palanca.** Abre [Probar-Palanca.cmd](Scripts/Probar-Palanca.cmd) con doble clic. La ventana muestra cada marcha física y las posiciones vistas. Dentro de la cabina, el indicador **Palanca** muestra la posición física incluso cuando la caja sigue en N.
 
 ## Punto de entrada

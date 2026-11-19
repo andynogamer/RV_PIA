@@ -2,6 +2,7 @@
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
+#include "Misc/ScopeLock.h"
 #include "Misc/App.h"
 #include "HAL/IConsoleManager.h"
 
@@ -28,60 +29,52 @@ namespace
     static TAutoConsoleVariable<float> CollisionGain(TEXT("rv.G920.CollisionGain"), .15f,
         TEXT("Normalized collision pulse gain, 0 disables, maximum 0.25."));
 
-    struct FWheelImpact
+    static TAutoConsoleVariable<float> CenteringGain(TEXT("rv.G920.CenteringGain"), .25f,
+        TEXT("Spring strength while driving. Zero disables centering. Maximum 0.35."));
+
+    // Each effect has independent loading, gain and lifetime. A completed load never starts a motor.
+    struct FWheelEffect
     {
         ComPtr<FF::IForceFeedbackMotor> Motor;
         ComPtr<FF::IForceFeedbackEffect> Effect;
         TAtomic<bool> bLoaded{false};
         bool bStarted = false;
 
-        static TSharedPtr<FWheelImpact, ESPMode::ThreadSafe> Load(ABI::Windows::Gaming::Input::IRacingWheel* Wheel)
+        static TSharedPtr<FWheelEffect, ESPMode::ThreadSafe> Load(FF::IForceFeedbackMotor* Motor,
+            const ComPtr<FF::IForceFeedbackEffect>& Effect, const TCHAR* Label)
         {
-            auto State = MakeShared<FWheelImpact, ESPMode::ThreadSafe>();
-            FF::ForceFeedbackEffectAxes Axes{};
-            if (FAILED(Wheel->get_WheelMotor(&State->Motor)) || !State->Motor ||
-                FAILED(State->Motor->get_SupportedAxes(&Axes)) || !(Axes & FF::ForceFeedbackEffectAxes_X)) return {};
-            ComPtr<FF::IPeriodicForceEffectFactory> Factory;
-            ComPtr<FF::IPeriodicForceEffect> Wave;
-            using Microsoft::WRL::Wrappers::HStringReference;
-            if (FAILED(RoGetActivationFactory(HStringReference(RuntimeClass_Windows_Gaming_Input_ForceFeedback_PeriodicForceEffect).Get(), IID_PPV_ARGS(&Factory))) ||
-                FAILED(Factory->CreateInstance(FF::PeriodicForceEffectKind_SineWave, &State->Effect)) ||
-                FAILED(State->Effect.As(&Wave)) ||
-                FAILED(Wave->SetParameters({1.f,0.f,0.f}, 20.f, 0.f, 0.f, {150 * ETimespan::TicksPerMillisecond})) ||
-                FAILED(State->Effect->put_Gain(0.0))) return {};
-            ComPtr<FLoadOperation> Operation;
-            if (FAILED(State->Motor->LoadEffectAsync(State->Effect.Get(), &Operation))) return {};
-            // Retain this device until loading completes, even if the map or device changes.
-            // Completion only makes the effect available. A past collision is never replayed.
-            auto Completion = Microsoft::WRL::Callback<ABI::Windows::Foundation::IAsyncOperationCompletedHandler<FLoadResult>>(
-                [State](FLoadOperation* Op, AsyncStatus Status) -> HRESULT
+            if (!Effect || FAILED(Effect->put_Gain(0.0))) return {};
+            auto State = MakeShared<FWheelEffect, ESPMode::ThreadSafe>();
+            State->Motor = Motor;
+            State->Effect = Effect;
+            ComPtr<FLoadOperation> Op;
+            if (FAILED(Motor->LoadEffectAsync(Effect.Get(), &Op))) return {};
+            auto Done = Microsoft::WRL::Callback<ABI::Windows::Foundation::IAsyncOperationCompletedHandler<FLoadResult>>(
+                [State,Label](FLoadOperation* Operation, AsyncStatus Status) -> HRESULT
                 {
                     FLoadResult Result{};
-                    const bool bReady = Status == AsyncStatus::Completed && SUCCEEDED(Op->GetResults(&Result)) &&
+                    const bool bReady = Status == AsyncStatus::Completed && SUCCEEDED(Operation->GetResults(&Result)) &&
                         Result == FF::ForceFeedbackLoadEffectResult_Succeeded;
                     State->bLoaded.Store(bReady);
-                    UE_LOG(LogTemp, Display, TEXT("G920: efecto de choque %s"), bReady ? TEXT("cargado") : TEXT("no disponible"));
+                    UE_LOG(LogTemp,Display,TEXT("G920: %s %s"),Label,bReady ? TEXT("cargado") : TEXT("no disponible"));
                     return S_OK;
                 });
-            if (FAILED(Operation->put_Completed(Completion.Get()))) return {};
+            if (FAILED(Op->put_Completed(Done.Get()))) return {};
             return State;
+        }
+
+        void Start(float Gain)
+        {
+            boolean Enabled = false, Paused = true;
+            if (bLoaded.Load() && Gain > 0.f && SUCCEEDED(Motor->get_IsEnabled(&Enabled)) && Enabled &&
+                SUCCEEDED(Motor->get_AreEffectsPaused(&Paused)) && !Paused && SUCCEEDED(Effect->put_Gain(Gain)))
+                bStarted = SUCCEEDED(Effect->Start());
         }
         void Stop()
         {
             if (bStarted) { Effect->Stop(); bStarted = false; }
         }
-        void Play()
-        {
-            if (!bLoaded.Load()) return;
-            Stop();
-            const float Gain = FMath::Clamp(CollisionGain.GetValueOnGameThread(), 0.f, .25f);
-            boolean Enabled = false, Paused = true;
-            if (Gain > 0.f && SUCCEEDED(Motor->get_IsEnabled(&Enabled)) && Enabled &&
-                SUCCEEDED(Motor->get_AreEffectsPaused(&Paused)) && !Paused && SUCCEEDED(Effect->put_Gain(Gain)))
-                bStarted = SUCCEEDED(Effect->Start());
-            if (bStarted) UE_LOG(LogTemp, Display, TEXT("G920: pulso por choque, 150 ms"));
-        }
-        ~FWheelImpact()
+        ~FWheelEffect()
         {
             Stop();
             if (bLoaded.Load())
@@ -89,6 +82,114 @@ namespace
                 ComPtr<__FIAsyncOperation_1_boolean> Unload;
                 Motor->TryUnloadEffectAsync(Effect.Get(), &Unload);
             }
+        }
+    };
+
+    struct FWheelForces
+    {
+        TSharedPtr<FWheelEffect, ESPMode::ThreadSafe> Impact;
+        TSharedPtr<FWheelEffect, ESPMode::ThreadSafe> Spring;
+        FCriticalSection SpringLock;
+        PTP_TIMER Watchdog = nullptr;
+        double LastDrivingSample = 0.;
+        double NextStartAttempt = 0.;
+        float AppliedGain = 0.f;
+
+        explicit FWheelForces(ABI::Windows::Gaming::Input::IRacingWheel* Wheel)
+        {
+            ComPtr<FF::IForceFeedbackMotor> Motor;
+            FF::ForceFeedbackEffectAxes Axes{};
+            if (FAILED(Wheel->get_WheelMotor(&Motor)) || !Motor || FAILED(Motor->get_SupportedAxes(&Axes)) ||
+                !(Axes & FF::ForceFeedbackEffectAxes_X)) return;
+            using Microsoft::WRL::Wrappers::HStringReference;
+            ComPtr<FF::IPeriodicForceEffectFactory> WaveFactory;
+            ComPtr<FF::IForceFeedbackEffect> WaveEffect;
+            ComPtr<FF::IPeriodicForceEffect> Wave;
+            if (SUCCEEDED(RoGetActivationFactory(HStringReference(RuntimeClass_Windows_Gaming_Input_ForceFeedback_PeriodicForceEffect).Get(), IID_PPV_ARGS(&WaveFactory))) &&
+                SUCCEEDED(WaveFactory->CreateInstance(FF::PeriodicForceEffectKind_SineWave, &WaveEffect)) &&
+                SUCCEEDED(WaveEffect.As(&Wave)) && SUCCEEDED(Wave->SetParameters({1.f,0.f,0.f},20.f,0.f,0.f,{150*ETimespan::TicksPerMillisecond})))
+                Impact = FWheelEffect::Load(Motor.Get(),WaveEffect,TEXT("efecto de choque"));
+
+            Watchdog = CreateThreadpoolTimer(&CheckDrivingSample,this,nullptr);
+            if (!Watchdog) return;
+            ComPtr<FF::IConditionForceEffectFactory> SpringFactory;
+            ComPtr<FF::IForceFeedbackEffect> SpringEffect;
+            ComPtr<FF::IConditionForceEffect> Condition;
+            if (SUCCEEDED(RoGetActivationFactory(HStringReference(RuntimeClass_Windows_Gaming_Input_ForceFeedback_ConditionForceEffect).Get(), IID_PPV_ARGS(&SpringFactory))) &&
+                SUCCEEDED(SpringFactory->CreateInstance(FF::ConditionForceEffectKind_Spring,&SpringEffect)) &&
+                SUCCEEDED(SpringEffect.As(&Condition)) && SUCCEEDED(Condition->SetParameters({1.f,0.f,0.f},1.f,1.f,1.f,1.f,.025f,0.f)))
+                Spring = FWheelEffect::Load(Motor.Get(),SpringEffect,TEXT("resorte de centrado"));
+        }
+        ~FWheelForces()
+        {
+            if (Watchdog)
+            {
+                SetThreadpoolTimer(Watchdog,nullptr,0,0);
+                WaitForThreadpoolTimerCallbacks(Watchdog,true);
+                CloseThreadpoolTimer(Watchdog);
+                Watchdog = nullptr;
+            }
+            Stop();
+        }
+        static void CALLBACK CheckDrivingSample(PTP_CALLBACK_INSTANCE, void* Context, PTP_TIMER)
+        {
+            auto& Self = *static_cast<FWheelForces*>(Context);
+            FScopeLock Guard(&Self.SpringLock);
+            if (Self.Spring && Self.Spring->bStarted && FPlatformTime::Seconds()-Self.LastDrivingSample >= .30)
+            {
+                const HRESULT Apartment = RoInitialize(RO_INIT_MULTITHREADED);
+                Self.Spring->Stop();
+                SetThreadpoolTimer(Self.Watchdog,nullptr,0,0);
+                if (SUCCEEDED(Apartment)) RoUninitialize();
+            }
+        }
+        void UpdateSpring(float Steering)
+        {
+            if (!Spring || !Spring->bLoaded.Load()) return;
+            const float Gain = FMath::Clamp(CenteringGain.GetValueOnGameThread(),0.f,.35f);
+            FScopeLock Guard(&SpringLock);
+            LastDrivingSample = FPlatformTime::Seconds();
+            if (Gain <= 0.f)
+            {
+                if (Spring->bStarted) { Spring->Stop(); SetThreadpoolTimer(Watchdog,nullptr,0,0); }
+                return;
+            }
+            if (Spring->bStarted)
+            {
+                if (Gain != AppliedGain && SUCCEEDED(Spring->Effect->put_Gain(Gain))) AppliedGain = Gain;
+                return;
+            }
+            // Do not pull a turned wheel when resuming or reconnecting.
+            if (!FMath::IsNearlyZero(Steering,.08f) || LastDrivingSample < NextStartAttempt) return;
+            NextStartAttempt = LastDrivingSample + .5;
+            Spring->Start(Gain);
+            if (Spring->bStarted)
+            {
+                AppliedGain = Gain;
+                LARGE_INTEGER Delay;
+                Delay.QuadPart = -100 * ETimespan::TicksPerMillisecond;
+                FILETIME Due{Delay.LowPart,static_cast<DWORD>(Delay.HighPart)};
+                SetThreadpoolTimer(Watchdog,&Due,50,0);
+                UE_LOG(LogTemp,Display,TEXT("G920: centrado activo (%.0f%%)"),Gain*100.f);
+            }
+        }
+        void Stop()
+        {
+            if (Impact) Impact->Stop();
+            FScopeLock Guard(&SpringLock);
+            if (Spring && Spring->bStarted)
+            {
+                Spring->Stop();
+                if (Watchdog) SetThreadpoolTimer(Watchdog,nullptr,0,0);
+                UE_LOG(LogTemp,Display,TEXT("G920: centrado detenido"));
+            }
+        }
+        void PlayImpact()
+        {
+            if (!Impact) return;
+            Impact->Stop();
+            Impact->Start(FMath::Clamp(CollisionGain.GetValueOnGameThread(),0.f,.25f));
+            if (Impact->bStarted) UE_LOG(LogTemp,Display,TEXT("G920: pulso por choque, 150 ms"));
         }
     };
     bool WheelHasInputFocus(void* Window)
@@ -110,7 +211,7 @@ struct FRVWheelInput::FSystemWheel
     Microsoft::WRL::ComPtr<ABI::Windows::Gaming::Input::IUINavigationControllerStatics2> NavigationFactory;
     Microsoft::WRL::ComPtr<ABI::Windows::Gaming::Input::IUINavigationController> Navigation;
     bool bDrivingLayout = false;
-    TSharedPtr<FWheelImpact, ESPMode::ThreadSafe> Impact;
+    TUniquePtr<FWheelForces> Forces;
 
     FSystemWheel()
     {
@@ -147,7 +248,7 @@ struct FRVWheelInput::FSystemWheel
                     if (Candidate.Get() != Matched.Get())
                     {
                         Matched = Candidate;
-                        Impact = FWheelImpact::Load(Candidate.Get());
+                        Forces.Reset();
                         Navigation.Reset();
                         Microsoft::WRL::ComPtr<ABI::Windows::Gaming::Input::IGameController> Controller;
                         if (NavigationFactory && SUCCEEDED(Candidate.As(&Controller)))
@@ -163,25 +264,34 @@ struct FRVWheelInput::FSystemWheel
             }
         }
         Matched.Reset();
-        Impact.Reset();
+        Forces.Reset();
         Navigation.Reset();
         return nullptr;
     }
 #endif
 };
 
-void FRVWheelInput::StopCollisionPulse()
+void FRVWheelInput::StopForces()
 {
 #if PLATFORM_WINDOWS
-    if (SystemWheel && SystemWheel->Impact) SystemWheel->Impact->Stop();
+    if (SystemWheel && SystemWheel->Forces) SystemWheel->Forces->Stop();
+#endif
+}
+
+void FRVWheelInput::UpdateCentering(void* Window,float Steering)
+{
+#if PLATFORM_WINDOWS
+    if (!SystemWheel || !WheelHasInputFocus(Window) || !SystemWheel->Matched) { StopForces(); return; }
+    if (!SystemWheel->Forces) SystemWheel->Forces = MakeUnique<FWheelForces>(SystemWheel->Matched.Get());
+    SystemWheel->Forces->UpdateSpring(Steering);
 #endif
 }
 
 void FRVWheelInput::PlayCollisionPulse(void* Window)
 {
 #if PLATFORM_WINDOWS
-    if (SystemWheel && WheelHasInputFocus(Window) && SystemWheel->FindConnected() && SystemWheel->Impact)
-        SystemWheel->Impact->Play();
+    if (SystemWheel && WheelHasInputFocus(Window) && SystemWheel->FindConnected() && SystemWheel->Forces)
+        SystemWheel->Forces->PlayImpact();
 #endif
 }
 
@@ -189,7 +299,7 @@ TOptional<ERVWheelButton> FRVWheelInput::ReadButtons(void* Window)
 {
 #if PLATFORM_WINDOWS
     static const bool bIsolated = FParse::Param(FCommandLine::Get(), TEXT("RVNoWheelInput"));
-    if (bIsolated || !WheelHasInputFocus(Window)) return {};
+    if (bIsolated || !WheelHasInputFocus(Window)) { StopForces(); return {}; }
     if (!SystemWheel) SystemWheel = MakeUnique<FSystemWheel>();
     if (!SystemWheel->FindConnected() || !SystemWheel->Navigation) return {};
     using namespace ABI::Windows::Gaming::Input;

@@ -43,7 +43,11 @@ Comprobaciones de la sesión en Unreal
 5. Medir tiempos de CPU/GPU y fluidez con el recorrido real; fijar presupuesto de fotograma conforme a la frecuencia elegida del visor, no a un número genérico.
 6. Validar salida rápida, pausa y prueba del ejecutable que se usará en la revisión.
 
-## Choque en el G920
+## Retorno al centro y choque en el G920
+
+El conductor sintió el golpe al chocar, pero el aro quedó suelto desde el comienzo de la práctica. Logitech indica que, cuando el juego toma el control de la fuerza, le corresponde generar el retorno al centro. El simulador carga un resorte simétrico sobre el eje X al recibir una lectura física válida en conducción. Para activarlo al entrar o reanudar, deja la palanca en N, suelta el acelerador y acerca el aro al centro. El efecto de choque funciona de forma independiente. [Comportamiento del resorte en G HUB](https://support.logi.com/hc/en-ca/articles/15583220063255-The-force-feedback-on-my-wheel-has-changed-and-I-can-no-longer-use-the-center-spring-force-setting-in-G-HUB-to-adjust-the-strength) y [parámetros del resorte en Windows](https://learn.microsoft.com/en-us/uwp/api/windows.gaming.input.forcefeedback.conditionforceeffect.setparameters).
+
+La ganancia inicial del resorte es 0,25. La variable `rv.G920.CenteringGain` permite ajustarla entre 0 y 0,35. El juego detiene el resorte al pausar, perder el foco o cambiar de modo. Un temporizador independiente comprueba cada 50 ms si han pasado 300 ms sin actualizar la conducción. La base aceptó cargar el resorte y la onda a la vez, detenidos. Para comprobar la sensación, gira un poco el aro a cada lado con el coche parado y en N, prueba la pausa con ☰ y vuelve al centro antes de reanudar.
 
 Windows enumeró el G920 conectado con motor habilitado y eje de fuerza X. El controlador aceptó cargar y descargar una onda senoidal en estado detenido. En conducción con una muestra física válida, el juego inicia en el motor un pulso de 150 ms a 20 Hz cuando detecta un golpe lateral o frontal significativo. Distingue impactos sucesivos de los contactos repetidos de la física. El suelo y los avisos de tráfico tienen salida cero. La ganancia inicial del efecto es 0,15, configurable en `rv.G920.CollisionGain` entre 0 y 0,25. El juego respeta la ganancia maestra de G HUB. La pausa, el cambio de modo, la pérdida de entrada y el cierre cancelan el efecto. La duración está programada también en el dispositivo. [Force feedback con Windows.Gaming.Input](https://learn.microsoft.com/en-us/windows/uwp/gaming/racing-wheel-and-force-feedback).
 

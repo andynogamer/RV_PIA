@@ -114,6 +114,12 @@ El 19 de noviembre de 2026 el usuario pidió corregir el inicio de espaldas al v
 
 En las Quest 3 el conductor encontró que la velocidad y las instrucciones tapaban el camino. El cuadro fijo de la cabina muestra marcha y velocidad. La consola presenta una instrucción o un aviso por vez. La guía del G920 reproduce las cuatro letras, sus colores y su disposición en el aro. Para el choque se adoptó un efecto senoidal finito de Windows.Gaming.Input tras comprobar la capacidad del motor y la carga del efecto en este G920. La penalización educativa y la repetición de pulsos se controlan por separado. [Hardware](HARDWARE.md).
 
+## D-022 — Renderizado de la ciudad en Windows PCVR
+
+El 19 de noviembre el usuario dio prioridad a la estabilidad de la ciudad. En Quest Link, el ejecutable terminó con una infracción de acceso durante el descarte de estados de cómputo. Direct3D 11 con SM5 eliminó los errores de creación de estados gráficos que aparecían al arrancar con Direct3D 12. Al renderizar dos vistas se reprodujo el cierre con Direct3D 11 durante el mismo descarte periódico.
+
+Para Windows se mantienen los estados gráficos en memoria durante la sesión con `r.pso.evictiontime=0`. El valor anterior de Unreal 5.6.1 era 60 s. El código del motor en `Runtime/RHI/Private/PipelineStateCache.cpp` define el valor cero y advierte del coste de retener estados. Al ampliar materiales y escenarios habrá que volver a medir la memoria en recorridos prolongados. Para revertir este ajuste, retirar la línea de expulsión de `Config/Windows/WindowsEngine.ini`. Para volver también al renderizador anterior, retirar la selección `DefaultGraphicsRHI` del mismo archivo. Volver a generar el stage después de ambos cambios. [Validación](VALIDACION.md).
+
 ## Registro de decisiones futuras
 
 Identificador y título; fecha; estado; problema; evidencia/fuente; decisión; consecuencias; validación; alternativa relevante si explica el costo; condición de revisión. Evitar abrir un registro nuevo por cambios triviales.

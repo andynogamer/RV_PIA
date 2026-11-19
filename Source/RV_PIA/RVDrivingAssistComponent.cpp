@@ -154,7 +154,7 @@ void URVDrivingAssistComponent::SubmitWheelSample(float Steering, float Throttle
 
 void URVDrivingAssistComponent::DisarmWheel()
 {
-    if (WheelInput) WheelInput->StopCollisionPulse();
+    if (WheelInput) WheelInput->StopForces();
     bHasPhysicalWheelSample = false;
     bRequireWheelNeutral = true;
     LastWheelSample = {};
@@ -268,6 +268,8 @@ bool URVDrivingAssistComponent::ApplyWheelInput(float DeltaTime, float& Requeste
         }
         bRequireWheelNeutral = false;
     }
+    if (bHasPhysicalWheelSample) WheelInput->UpdateCentering(GetWheelWindow(),Sample.Steering);
+    else WheelInput->StopForces();
     RequestedThrottle = Sample.Throttle;
 
     // No torque while leaving a gate. Only a stable detent can select a gear.

@@ -29,7 +29,8 @@ public:
     bool Read(void* Window, FRVWheelSample& Sample);
     TOptional<ERVWheelButton> ReadButtons(void* Window);
     void PlayCollisionPulse(void* Window);
-    void StopCollisionPulse();
+    void StopForces();
+    void UpdateCentering(void* Window,float Steering);
     void StartCalibration();
     void CancelCalibration();
     void CaptureStep(void* Window);
