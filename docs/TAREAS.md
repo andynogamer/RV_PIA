@@ -4,6 +4,8 @@ Fecha objetivo indicada: jueves 19 de noviembre de 2026. Este orden prioriza una
 
 ## P0 — Simulación e integración indispensables
 
+- [ ] **URB-03 Fachadas de la banqueta y cierre de la vista estéreo.** Se corrigieron cuatro fachadas de la avenida y se cambió la captura del cielo fijo. Pendiente repetir el paso junto al saliente con las Quest 3 después del arreglo. [Diagnóstico y comprobaciones](ESTADO.md#fachadas-de-la-avenida-y-cierre-al-conducir-en-estéreo).
+
 - [x] **URB-02 Reproducir y corregir el cierre de la ciudad en PCVR.** El ajuste de caché pasó dos recorridos consecutivos en estéreo emulado con 30 impactos y reinicios. Durante la conducción con las Quest 3 y el G920, el ejecutable superó los 65 s del fallo original y seguía activo a los 145 s con ocho pulsos por impacto. [Evidencia y límites del ensayo](ESTADO.md).
 
 - [x] **SCN-04 Continuidad del terreno y estacionamiento.** Corregir los huecos de Distrito Norte y la invasión del pasto en Sierra del Pino. Añadir y probar el módulo de entrada de frente y en reversa en escritorio.

@@ -17,11 +17,16 @@ collision_folder='/Game/RutaVirtual/Environment/UrbanCollision'
 lib.make_directory(collision_folder)
 removed=0; collisions=0
 all_actors=list(actors.get_all_level_actors())
+# These street-level facades are low or thin enough to miss the general building filter.
+sidewalk_facades={'SM_element_026','SM_element_042','SM_slc_bottom','SM_element_084'}
 with unreal.ScopedSlowTask(len(all_actors),'Preparando ciudad y colisiones') as progress:
     progress.make_dialog(False)
     for actor in all_actors:
         progress.enter_progress_frame(1)
         name=actor.get_actor_label()
+        if isinstance(actor,unreal.SkyLight) and name=='Luz_Cielo':
+            # Daylight is fixed. Capture it on load, outside the stereo eye render pass.
+            actor.light_component.set_editor_property('real_time_capture',False)
         if name.startswith('Practica_'):
             actors.destroy_actor(actor); continue
         if not isinstance(actor,unreal.StaticMeshActor) or str(actor.get_folder_path())!='Ciudad': continue
@@ -33,10 +38,15 @@ with unreal.ScopedSlowTask(len(all_actors),'Preparando ciudad y colisiones') as 
             actors.destroy_actor(actor); removed+=1; continue
         bounds=mesh.get_bounds(); extent=bounds.box_extent
         # Exact static triangle collision on substantial buildings. Avoid pooled cables/props.
-        if extent.z>250 and min(extent.x,extent.y)>180 and max(extent.x,extent.y)<10000 and mesh_name!='SM_Ground':
+        large_building=(extent.z>250 and min(extent.x,extent.y)>180
+                        and max(extent.x,extent.y)<10000 and mesh_name!='SM_Ground')
+        if mesh_name in sidewalk_facades or large_building:
             target=collision_folder+'/'+mesh_name
             duplicate=lib.load_asset(target) if lib.does_asset_exist(target) else lib.duplicate_asset(mesh.get_path_name().split('.')[0],target)
-            duplicate.get_editor_property('body_setup').set_editor_property('collision_trace_flag',unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE)
+            body=duplicate.get_editor_property('body_setup')
+            body.set_editor_property('collision_trace_flag',unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE)
+            if mesh_name in sidewalk_facades:
+                body.set_editor_property('double_sided_geometry',True)
             lib.save_loaded_asset(duplicate)
             component.set_static_mesh(duplicate);component.set_collision_profile_name('BlockAll')
             collisions+=1

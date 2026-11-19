@@ -32,6 +32,25 @@ Cada tarea registra fecha, versión/commit cuando exista, comando o pasos, resul
 5. Revisar materiales/texturas y avisos de referencias ausentes.
 6. Medir CPU/GPU y memoria durante el recorrido. No fijar calidad visual solo por el aspecto en editor.
 
+### Regresión de las fachadas y del cierre en estéreo
+
+En una sesión aislada, lanzar el paquete Win64 Development desde PowerShell. La orden requiere dos vistas activas y recorre la ciudad con tráfico, impactos, pausas y reinicios. Después comprueba las cuatro fachadas con el canal de colisión del vehículo, el espacio libre en la banqueta y un choque del coche Chaos contra el saliente. Esperar la salida del proceso y los dos resultados `Success` en el registro.
+
+```powershell
+New-Item -ItemType Directory -Force .\Saved\AgentReports | Out-Null
+$registro = Join-Path $PWD 'Saved\AgentReports\regresion_ciudad.log'
+$argumentos = @(
+    '/Game/RutaVirtual/Maps/L_CiudadUrbana', '-emulatestereo', '-RVRequireStereo',
+    '-RVNoWheelInput', '-unattended', '-windowed', '-ResX=1000', '-ResY=520',
+    '-ExecCmds="Automation RunTests RutaVirtual.City."', '-TestExit="Automation Test Queue Empty"',
+    ('-abslog="' + $registro + '"')
+)
+Start-Process .\Saved\StagedBuilds\Windows\RV_PIA.exe -ArgumentList $argumentos -Wait
+Select-String -LiteralPath $registro -Pattern 'Test Completed'
+```
+
+Para comparar con el editor en modo juego, usar `UnrealEditor.exe` con la ruta del `.uproject`, `-game` y los mismos argumentos. La validación física consiste en repetir la aproximación en Vista previa de RV con Quest Link y comprobar que el coche se detenga en la pared y permita volver a la avenida.
+
 ## Conducción y sesión
 
 - Menú: probar `test_session_menu.py` desde el inicio y luego interacción real: Play → Enter sin clic en la escena, botones de controles/volver/inicio, pausa P/M, reinicio, continuación y salida. La captura debe verificarse mediante foco y uso real, no únicamente con `show_mouse_cursor`.

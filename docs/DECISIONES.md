@@ -120,6 +120,12 @@ El 19 de noviembre el usuario dio prioridad a la estabilidad de la ciudad. En Qu
 
 Para Windows se mantienen los estados gráficos en memoria durante la sesión con `r.pso.evictiontime=0`. El valor anterior de Unreal 5.6.1 era 60 s. El código del motor en `Runtime/RHI/Private/PipelineStateCache.cpp` define el valor cero y advierte del coste de retener estados. Al ampliar materiales y escenarios habrá que volver a medir la memoria en recorridos prolongados. Para revertir este ajuste, retirar la línea de expulsión de `Config/Windows/WindowsEngine.ini`. Para volver también al renderizador anterior, retirar la selección `DefaultGraphicsRHI` del mismo archivo. Volver a generar el stage después de ambos cambios. [Validación](VALIDACION.md).
 
+## D-023 — Captura del cielo en la ciudad
+
+La ciudad tiene iluminación diurna fija. Su luz `Luz_Cielo` ahora captura el entorno al cargar el nivel. El ajuste afecta solo a `L_CiudadUrbana` y se aplica también al generar el mapa.
+
+En el código instalado de UE 5.6.1, `Renderer/Private/Renderer/ViewSnapshotCache.cpp` copia la vista con `FMemory::Memcpy`. La copia conserva el puntero compartido a `StereoCullingFrustum` sin adquirir otra referencia. En `Renderer/Private/ReflectionEnvironmentRealTimeCapture.cpp`, la captura continua del cielo toma esa copia del ojo principal, la convierte en una vista mono y actualiza la proyección. En `Engine/Private/SceneView.cpp`, esa actualización libera la referencia compartida al dejar el modo estéreo. La vista original puede terminar liberando memoria ya invalidada. Dos volcados del mapa anterior coinciden en la liberación de ese mismo miembro, uno con Quest Link y otro con dos vistas emuladas. Capturar el cielo al cargar evita ese recorrido de renderizado. Si se introduce un ciclo día/noche, habrá que reevaluar la recaptura con ambas vistas activas.
+
 ## Registro de decisiones futuras
 
 Identificador y título; fecha; estado; problema; evidencia/fuente; decisión; consecuencias; validación; alternativa relevante si explica el costo; condición de revisión. Evitar abrir un registro nuevo por cambios triviales.
